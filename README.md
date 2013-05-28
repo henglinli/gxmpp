@@ -13,7 +13,8 @@ It like [txmpp][txmpp] but up to date with [libjingle][libjingle] and less tweak
 
 ### Build and Install
 
-    ndk_build
+    make _or_
+    move to folder jni and ndk_build 
 
 ### Getting Started
 
