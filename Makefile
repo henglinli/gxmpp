@@ -32,7 +32,7 @@ SOURCES += $(wildcard ./talk/base/*.cc) \
 
 LIBOBJECTS = $(SOURCES:.cc=.o) $(EXPAT_OBJS)
 
-PROGRAMS = gxmpp_hello
+PROGRAMS = gxmpp_hello gxmpp_chat
 
 LIBRARY = libgxmpp.a
 
@@ -43,7 +43,7 @@ default: all
 all: $(LIBRARY) $(SHARED) $(PROGRAMS)
 
 clean:
-	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS) $(HELLO_OBJS)
+	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS) $(HELLO_OBJS) $(CHAT_OBJS)
 
 $(SHARED): $(LIBOBJECTS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -shared -o $(SHARED) 
@@ -53,11 +53,17 @@ $(LIBRARY): $(LIBOBJECTS)
 	rm -f $@
 	$(AR) -rs $@ $(LIBOBJECTS)
 
-HELLO_SRC += $(wildcard ./example/*.cc)
+HELLO_SRC += $(wildcard ./example/hello/*.cc)
 HELLO_OBJS += $(HELLO_SRC:.cc=.o)
 gxmpp_hello: $(LIBOBJECTS) $(HELLO_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
+CHAT_SRC += $(wildcard ./example/chat/*.cc)
+CHAT_OBJS += $(CHAT_SRC:.cc=.o)
+gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
+	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
+
+#=============================================================
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
