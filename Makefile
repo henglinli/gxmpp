@@ -43,7 +43,7 @@ default: all
 all: $(LIBRARY) $(SHARED) $(PROGRAMS)
 
 clean:
-	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS)
+	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS) $(HELLO_OBJS)
 
 $(SHARED): $(LIBOBJECTS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -shared -o $(SHARED) 
