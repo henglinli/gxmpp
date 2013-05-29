@@ -10,6 +10,9 @@ OPT ?= -O2 -DNDEBUG 	  # (A) Production use (optimized mode)
 # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
 # OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
 #-----------------------------------------------
+CC = clang
+CXX = clang++
+
 FLAGS += -DPOSIX -DLINUX -DEXPAT_RELATIVE_PATH 
 CFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -DHAVE_MEMMOVE
 CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC
@@ -29,7 +32,7 @@ SOURCES += $(wildcard ./talk/base/*.cc) \
 
 LIBOBJECTS = $(SOURCES:.cc=.o) $(EXPAT_OBJS)
 
-PROGRAMS = gxmpp_chat gxmpp_login
+PROGRAMS = gxmpp_hello
 
 LIBRARY = libgxmpp.a
 
@@ -50,15 +53,10 @@ $(LIBRARY): $(LIBOBJECTS)
 	rm -f $@
 	$(AR) -rs $@ $(LIBOBJECTS)
 
-CHAT_SRC += $(wildcard ./talk/examples/chat/*.cc)
-CHAT_OBJS += $(CHAT_SRC:.cc=.o)
-gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
+HELLO_SRC += $(wildcard ./example/*.cc)
+HELLO_OBJS += $(HELLO_SRC:.cc=.o)
+gxmpp_hello: $(LIBOBJECTS) $(HELLO_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
-
-LOGIN_SRC += $(wildcard ./talk/examples/login/*.cc)
-LOGIN_OBJS += $(CHAT_SRC:.cc=.o)
-gxmpp_login: $(LIBOBJECTS) $(LOGIN_OBJS)
-	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@
 
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
