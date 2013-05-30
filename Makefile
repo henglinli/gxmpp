@@ -53,12 +53,12 @@ $(LIBRARY): $(LIBOBJECTS)
 	rm -f $@
 	$(AR) -rs $@ $(LIBOBJECTS)
 
-HELLO_SRC += $(wildcard ./example/hello/*.cc)
+HELLO_SRC += $(wildcard ./examples/hello/*.cc)
 HELLO_OBJS += $(HELLO_SRC:.cc=.o)
 gxmpp_hello: $(LIBOBJECTS) $(HELLO_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
-CHAT_SRC += $(wildcard ./example/chat/*.cc)
+CHAT_SRC += $(wildcard ./examples/chat/*.cc)
 CHAT_OBJS += $(CHAT_SRC:.cc=.o)
 gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
