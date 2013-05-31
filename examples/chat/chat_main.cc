@@ -47,6 +47,7 @@
 #include "talk/xmpp/xmppclientsettings.h"
 #include "talk/xmpp/xmpppump.h"
 #include "talk/xmpp/xmppsocket.h"
+#include "talk/xmpp/xmppthread.h"
 
 #include "chatapp.h"
 #include "consoletask.h"
@@ -58,7 +59,7 @@ int main(int argc, char* argv[]) {
   // Set up debugging.
   bool debug = true;
   if (debug) {
-    talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
+    talk_base::LogMessage::LogToDebug(talk_base::LS_VERBOSE);
   }
 
   // Set up the crypto subsystem.
@@ -152,6 +153,7 @@ int main(int argc, char* argv[]) {
   pump->DoLogin(xcs, new buzz::XmppSocket(buzz::TLS_DISABLED), new XmppAuth());
 
   main_thread->Run();
+
   pump->DoDisconnect();
 
   delete client;

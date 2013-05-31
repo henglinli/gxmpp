@@ -6,7 +6,7 @@
 # Uncomment exactly one of the lines labelled (A), (B), and (C) below
 # to switch between compilation modes.
 
-OPT ?= -O2 -DNDEBUG 	  # (A) Production use (optimized mode)
+OPT ?= -O2 -D_DEBUG	  # (A) Production use (optimized mode)
 # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
 # OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
 #-----------------------------------------------
@@ -32,7 +32,7 @@ SOURCES += $(wildcard ./talk/base/*.cc) \
 
 LIBOBJECTS = $(SOURCES:.cc=.o) $(EXPAT_OBJS)
 
-PROGRAMS = gxmpp_hello gxmpp_chat
+PROGRAMS = gxmpp_hello gxmpp_chat gxmpp_echo
 
 LIBRARY = libgxmpp.a
 
@@ -43,7 +43,7 @@ default: all
 all: $(LIBRARY) $(SHARED) $(PROGRAMS)
 
 clean:
-	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS) $(HELLO_OBJS) $(CHAT_OBJS)
+	-rm -f $(PROGRAMS) $(LIBRARY) $(SHARED) $(LIBOBJECTS) $(HELLO_OBJS) $(CHAT_OBJS) $(ECHO_OBJS)
 
 $(SHARED): $(LIBOBJECTS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -shared -o $(SHARED) 
@@ -61,6 +61,11 @@ gxmpp_hello: $(LIBOBJECTS) $(HELLO_OBJS)
 CHAT_SRC += $(wildcard ./examples/chat/*.cc)
 CHAT_OBJS += $(CHAT_SRC:.cc=.o)
 gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
+	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
+
+ECHO_SRC += $(wildcard ./examples/echo/*.cc)
+ECHO_OBJS += $(ECHO_SRC:.cc=.o)
+gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 #=============================================================

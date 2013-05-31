@@ -61,9 +61,9 @@ void XmppPump::DoDisconnect() {
 }
 
 void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
-  if (state_ == state)
+  if (this->state_ == state)
     return;
-  std::cout << "STATE: " << state_ << std::endl;
+  std::cout << "STATE: " << this->state_ << std::endl;
   switch(state) {
     case buzz::XmppEngine::STATE_OPEN: {
       // task_message, task_precence and task_iq are deleted by client_
@@ -91,7 +91,7 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
   default :
     break;
   }
-  state_ = state;
+  this->state_ = state;
   if (notify_ != NULL)
     notify_->OnStateChange(state);
 }
