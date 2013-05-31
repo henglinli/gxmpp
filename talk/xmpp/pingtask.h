@@ -58,7 +58,6 @@ class PingTask : public buzz::XmppTask, private talk_base::MessageHandler {
  private:
   // Implementation of MessageHandler.
   virtual void OnMessage(talk_base::Message* msg);
-
   talk_base::MessageQueue* message_queue_;
   uint32 ping_period_millis_;
   uint32 ping_timeout_millis_;

@@ -33,7 +33,7 @@
 #include "sendtask.h"
 #include "receivetask.h"
 
-namespace echo {
+namespace echo {  
   class EchoThread : public buzz::XmppThread
       , public sigslot::has_slots<>
   {
@@ -45,11 +45,14 @@ namespace echo {
     ~EchoThread(){};
     buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
     virtual void OnStateChange(buzz::XmppEngine::State state);
-    void OnMessage(const buzz::Jid& from,
-                   const buzz::Jid& to,
-                   const std::string& message);
-    /* data */
+    virtual void OnMessage(const buzz::Jid& from,
+                           const buzz::Jid& to,
+                           const std::string& message) = 0;
+    virtual void OnOpen() = 0;
+    virtual int OnClosed() = 0;
  private:
+    void OnXmppOpen();
+    void OnXmppClosed();
     talk_base::scoped_ptr<buzz::PingTask> ping_task_; 
     // We send presence information through this object.
     talk_base::scoped_ptr<buzz::PresenceOutTask> presence_out_task_;
@@ -58,6 +61,18 @@ namespace echo {
     //talk_base::scoped_ptr<talk_base::MessageQueue> message_queue_;
     talk_base::MessageQueue message_queue_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
+  };
+  
+  class Echo : public EchoThread
+  {
+ public:
+    Echo(){};
+    ~Echo(){};    
+    virtual void OnMessage(const buzz::Jid& from,
+                           const buzz::Jid& to,
+                           const std::string& message);
+    virtual void OnOpen();
+    virtual int OnClosed();    
   };
 }
 #endif  // _ECHO_XMPPTHREAD_H_

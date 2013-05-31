@@ -44,14 +44,13 @@ buzz::XmppReturnStatus SendTask::Send(const buzz::Jid& to,
   if (GetState() != STATE_INIT && GetState() != STATE_START) {
     return buzz::XMPP_RETURN_BADSTATE;
   }
-
   // Put together the chat stanza...
   buzz::XmlElement* message_stanza = new buzz::XmlElement(buzz::QN_MESSAGE);
 
   // ... and specify the required attributes...
   message_stanza->AddAttr(buzz::QN_TO, to.Str());
   message_stanza->AddAttr(buzz::QN_TYPE, "chat");
-  //  message_stanza->AddAttr(QN_LANG, "en");
+  message_stanza->AddAttr(buzz::QN_LANG, "en");
 
   // ... and fill out the body.
   buzz::XmlElement* message_body = new buzz::XmlElement(buzz::QN_BODY);

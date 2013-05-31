@@ -80,8 +80,8 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
       // response
       XmppTaskIq *task_iq = new XmppTaskIq(client_);
       task_iq->Start();
-      }
       break;
+    }
     case buzz::XmppEngine::STATE_START:
     case buzz::XmppEngine::STATE_OPENING:
       break;

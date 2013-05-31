@@ -5,6 +5,9 @@ _gxmpp_ is a C++ XMPP library created from the non-[XEP-0166][xep0166] portions
 of [libjingle][libjingle] without ssl support and for andorid only.
 
 It like [txmpp][txmpp] but up to date with [libjingle][libjingle] and less tweak.
+### Info
+
+port from libjinle svn r325.
 
 ### Requirements
 

@@ -23,7 +23,14 @@ PingTask::PingTask(buzz::XmppTaskParentInterface* parent,
 }
 
 bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
+  LOG(LS_SENSITIVE) << talk_base::Time();
+  LOG(LS_SENSITIVE) << stanza->Str();
+  #if 0
   if (!MatchResponseIq(stanza, Jid(STR_EMPTY), task_id())) {
+    return false;
+  }
+  #endif
+  if (!MatchStanzaFrom(stanza, GetClient()->jid())) {
     return false;
   }
 
@@ -33,12 +40,14 @@ bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
   }
 
   QueueStanza(stanza);
+
   return true;
 }
 
 // This task runs indefinitely and remains in either the start or blocked
 // states.
 int PingTask::ProcessStart() {
+  LOG(LS_SENSITIVE) << "PingTask start!";
   if (ping_period_millis_ < ping_timeout_millis_) {
     LOG(LS_ERROR) << "ping_period_millis should be >= ping_timeout_millis";
     return STATE_ERROR;
@@ -60,10 +69,16 @@ int PingTask::ProcessStart() {
   // Send a ping if it's time.
   if (now >= next_ping_time_) {
     talk_base::scoped_ptr<buzz::XmlElement> stanza(
+        #if 0
         MakeIq(buzz::STR_GET, Jid(STR_EMPTY), task_id()));
+        #endif
+     // add by henglinli@gmail.com
+     // fix ping without jid
+        MakeIq(buzz::STR_GET, GetClient()->jid(), task_id()));
+    //LOG(LS_SENSITIVE) << GetClient()->jid().Str();
     stanza->AddElement(new buzz::XmlElement(QN_PING));
     SendStanza(stanza.get());
-
+    LOG(LS_SENSITIVE) << stanza->Str();
     ping_response_deadline_ = now + ping_timeout_millis_;
     next_ping_time_ = now + ping_period_millis_;
 
@@ -72,7 +87,7 @@ int PingTask::ProcessStart() {
     message_queue_->PostDelayed(ping_timeout_millis_, this);
     message_queue_->PostDelayed(ping_period_millis_, this);
   }
-
+  LOG(LS_SENSITIVE) << "PingTask done!";
   return STATE_BLOCKED;
 }
 

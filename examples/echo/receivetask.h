@@ -41,7 +41,7 @@ namespace echo {
  protected:
     // Return true if the stanza should be received.
     virtual bool WantsStanza(const buzz::XmlElement* stanza);
-  // Process the received stanza.
+    // Process the received stanza.
     virtual void ReceiveStanza(const buzz::XmlElement* stanza);
  private:	
     DISALLOW_EVIL_CONSTRUCTORS(ReceiveTask);

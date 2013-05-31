@@ -55,7 +55,8 @@ int main(int argc, char* argv[]) {
   while (reconnect) {
 
     // Start xmpp on a different thread
-    echo::EchoThread thread;
+    echo::Echo thread;
+    //buzz::XmppThread thread;
     thread.Start();
 
     // Create client settings
@@ -69,6 +70,7 @@ int main(int argc, char* argv[]) {
 
     thread.Login(xcs);
 
+    thread.Send(buzz::Jid("li@xmpp.ikanke.cn"), "hello");
     // Use main thread for console input
     char *line = NULL;
     size_t len = 0;
@@ -77,15 +79,13 @@ int main(int argc, char* argv[]) {
       if (!strncmp("quit", line, 4) || !strncmp("q", line, 1)) {
         printf("%s\n", line);
         reconnect = false;
+        break;
       }
       if (!strncmp("continue", line, 7) || 
-        !strncmp("c", line, 1) || 
-        !strncmp("q", line, 1) || 
-        !strncmp("quit", line, 4)) {
+          !strncmp("c", line, 1))  {
         break;
       }
     }
-
     thread.Disconnect();
     thread.Stop();
   }
