@@ -21,7 +21,7 @@ port from libjinle svn r325.
 
 ### Getting Started
 
-See the `talk/examples` directory.
+See the `examples` directory.
 
 ### License
 

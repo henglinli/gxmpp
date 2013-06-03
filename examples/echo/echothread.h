@@ -38,41 +38,30 @@ namespace echo {
       , public sigslot::has_slots<>
   {
  public:
-    EchoThread(){
-      //message_queue_.reset(new talk_base::MessageQueue);
-      //client()->SignalStateChange.connect(this, &EchoThread::OnMessage);
-    };
-    ~EchoThread(){};
+    EchoThread();
+    ~EchoThread();
     buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
     virtual void OnStateChange(buzz::XmppEngine::State state);
-    virtual void OnMessage(const buzz::Jid& from,
-                           const buzz::Jid& to,
-                           const std::string& message) = 0;
-    virtual void OnOpen() = 0;
-    virtual int OnClosed() = 0;
+    virtual void OnXmppMessage(const buzz::Jid& from,
+                               const buzz::Jid& to,
+                               const std::string& message);
+    virtual void OnXmppOpen();
+    virtual void OnXmppClosed();
  private:
-    void OnXmppOpen();
-    void OnXmppClosed();
-    talk_base::scoped_ptr<buzz::PingTask> ping_task_; 
-    // We send presence information through this object.
+    #if 1
+    talk_base::scoped_ptr<buzz::PingTask> ping_task_;    
+    // We send presence information through this object.  
     talk_base::scoped_ptr<buzz::PresenceOutTask> presence_out_task_;
     talk_base::scoped_ptr<echo::SendTask> send_task_;
     talk_base::scoped_ptr<echo::ReceiveTask> receive_task_;
-    //talk_base::scoped_ptr<talk_base::MessageQueue> message_queue_;
+    #else
+    buzz::PingTask ping_task_;
+    buzz::PresenceOutTask presence_out_task_;
+    echo::SendTask send_task_;
+    echo::ReceiveTask receive_task_;
+    #endif
     talk_base::MessageQueue message_queue_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
-  };
-  
-  class Echo : public EchoThread
-  {
- public:
-    Echo(){};
-    ~Echo(){};    
-    virtual void OnMessage(const buzz::Jid& from,
-                           const buzz::Jid& to,
-                           const std::string& message);
-    virtual void OnOpen();
-    virtual int OnClosed();    
   };
 }
 #endif  // _ECHO_XMPPTHREAD_H_

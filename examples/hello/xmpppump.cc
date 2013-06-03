@@ -70,6 +70,7 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
       //
       // This accepts <message/> stanzas and prints the sender and message
       // to stdout
+      #if 1
       XmppTaskMessage *task_message = new XmppTaskMessage(client_);
       task_message->Start();
       // This accepts <presence/> stanzas and prints whom they're from
@@ -80,6 +81,13 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
       // response
       XmppTaskIq *task_iq = new XmppTaskIq(client_);
       task_iq->Start();
+      #else
+      task_message_.reset(new XmppTaskMessage(client_));
+      task_message_->Start();
+      task_presence_.reset(new XmppTaskPresence(client_));
+      task_iq_.reset(new XmppTaskIq(client_));
+      task_iq_->Start();
+      #endif
       break;
     }
     case buzz::XmppEngine::STATE_START:

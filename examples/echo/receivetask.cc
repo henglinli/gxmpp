@@ -1,4 +1,4 @@
-//#include "talk/base/logging.h"
+#include "talk/base/logging.h"
 #include "talk/xmpp/constants.h"
 #include "receivetask.h"
 
@@ -7,7 +7,9 @@ ReceiveTask::ReceiveTask(buzz::XmppTaskParentInterface* parent) :
     buzz::ReceiveTask(parent) {
 }
 
-ReceiveTask::~ReceiveTask() {}
+ReceiveTask::~ReceiveTask() {
+  Stop();
+}
 // Return true if the stanza should be received.
 bool ReceiveTask::WantsStanza(const buzz::XmlElement* stanza) {
   //LOG(LS_SENSITIVE) << "handleRecieve";

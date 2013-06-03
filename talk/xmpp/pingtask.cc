@@ -1,6 +1,4 @@
 // Copyright 2011 Google Inc. All Rights Reserved.
-
-
 #include "talk/xmpp/pingtask.h"
 
 #include "talk/base/logging.h"
@@ -23,17 +21,16 @@ PingTask::PingTask(buzz::XmppTaskParentInterface* parent,
 }
 
 bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
-  LOG(LS_SENSITIVE) << talk_base::Time();
-  LOG(LS_SENSITIVE) << stanza->Str();
-  #if 0
+  #if 1
+   LOG(LS_SENSITIVE) << stanza->Str();  
   if (!MatchResponseIq(stanza, Jid(STR_EMPTY), task_id())) {
     return false;
   }
-  #endif
+  #else
   if (!MatchStanzaFrom(stanza, GetClient()->jid())) {
     return false;
   }
-
+#endif
   if (stanza->Attr(buzz::QN_TYPE) != buzz::STR_RESULT &&
       stanza->Attr(buzz::QN_TYPE) != buzz::STR_ERROR) {
     return false;
@@ -44,10 +41,18 @@ bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
   return true;
 }
 
+XmlElement* PingTask::MakePingTo(const std::string& to)
+{
+  XmlElement* result = new XmlElement(QN_IQ);
+  result->AddAttr(QN_TYPE, STR_GET);
+  result->AddAttr(QN_TO, to);
+  result->AddAttr(QN_ID, task_id());
+  return result;
+}
+
 // This task runs indefinitely and remains in either the start or blocked
 // states.
 int PingTask::ProcessStart() {
-  LOG(LS_SENSITIVE) << "PingTask start!";
   if (ping_period_millis_ < ping_timeout_millis_) {
     LOG(LS_ERROR) << "ping_period_millis should be >= ping_timeout_millis";
     return STATE_ERROR;
@@ -69,14 +74,14 @@ int PingTask::ProcessStart() {
   // Send a ping if it's time.
   if (now >= next_ping_time_) {
     talk_base::scoped_ptr<buzz::XmlElement> stanza(
-        #if 0
+        #if 1 
         MakeIq(buzz::STR_GET, Jid(STR_EMPTY), task_id()));
-        #endif
+        #else
      // add by henglinli@gmail.com
      // fix ping without jid
-        MakeIq(buzz::STR_GET, GetClient()->jid(), task_id()));
-    //LOG(LS_SENSITIVE) << GetClient()->jid().Str();
-    stanza->AddElement(new buzz::XmlElement(QN_PING));
+        MakePingTo(GetClient()->jid().domain()));
+        #endif
+    stanza->AddElement(new buzz::XmlElement(QN_PING, true));
     SendStanza(stanza.get());
     LOG(LS_SENSITIVE) << stanza->Str();
     ping_response_deadline_ = now + ping_timeout_millis_;
@@ -87,7 +92,6 @@ int PingTask::ProcessStart() {
     message_queue_->PostDelayed(ping_timeout_millis_, this);
     message_queue_->PostDelayed(ping_period_millis_, this);
   }
-  LOG(LS_SENSITIVE) << "PingTask done!";
   return STATE_BLOCKED;
 }
 

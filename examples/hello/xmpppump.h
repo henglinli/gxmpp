@@ -35,6 +35,7 @@
 #include "talk/xmpp/xmppclient.h"
 #include "talk/xmpp/xmppengine.h"
 #include "talk/xmpp/xmpptask.h"
+ #include "xmpptasks.h"
 
 namespace hello {
 
@@ -62,6 +63,9 @@ class XmppPump : public talk_base::MessageHandler, public talk_base::TaskRunner 
     void OnMessage(talk_base::Message *pmsg);
 
   private:
+    talk_base::scoped_ptr<XmppTaskMessage> task_message_;
+    talk_base::scoped_ptr<XmppTaskPresence> task_presence_;
+    talk_base::scoped_ptr<XmppTaskIq> task_iq_;
     buzz::XmppClient *client_;
     buzz::XmppEngine::State state_;
     XmppPumpNotify *notify_;

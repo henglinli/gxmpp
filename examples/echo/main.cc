@@ -53,9 +53,8 @@ int main(int argc, char* argv[]) {
 
   bool reconnect = true;
   while (reconnect) {
-
     // Start xmpp on a different thread
-    echo::Echo thread;
+    echo::EchoThread thread;
     //buzz::XmppThread thread;
     thread.Start();
 
@@ -65,7 +64,7 @@ int main(int argc, char* argv[]) {
     xcs.set_pass(talk_base::CryptString(password));
     xcs.set_host(jid.domain());
     xcs.set_resource("chat");
-    //xcs.set_use_tls(buzz::TLS_DISABLED);
+    // xcs.set_use_tls(buzz::TLS_DISABLED);
     xcs.set_server(talk_base::SocketAddress(jid.domain(), kDefaultXmppPort));
 
     thread.Login(xcs);
@@ -75,19 +74,19 @@ int main(int argc, char* argv[]) {
     char *line = NULL;
     size_t len = 0;
     while (getline(&line, &len, stdin)) {
-      printf("you input: %s\n", line);
       if (!strncmp("quit", line, 4) || !strncmp("q", line, 1)) {
-        printf("%s\n", line);
         reconnect = false;
-        break;
-      }
+      }     
       if (!strncmp("continue", line, 7) || 
-          !strncmp("c", line, 1))  {
+          !strncmp("c", line, 1) ||
+          !strncmp("quit", line, 4) ||
+          !strncmp("q", line, 1)) {        
+        printf("reconnect? : %s\n" , reconnect ? "Yes" : "No");
         break;
       }
     }
     thread.Disconnect();
-    thread.Stop();
+    thread.Stop();   
   }
 
   return 0;
