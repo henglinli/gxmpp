@@ -6,7 +6,7 @@
 # Uncomment exactly one of the lines labelled (A), (B), and (C) below
 # to switch between compilation modes.
 
-OPT ?= -g -O0 -pipe -D_DEBUG # (A) Production use (optimized mode)
+OPT ?= -g -O0 -pipe -DLOGGING # (A) Production use (optimized mode)
 # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
 # OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
 #-----------------------------------------------
@@ -63,12 +63,17 @@ CHAT_OBJS += $(CHAT_SRC:.cc=.o)
 gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
-ECHO_SRC += $(wildcard ./examples/echo/*.cc)
-ECHO_OBJS += $(ECHO_SRC:.cc=.o)
-gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS)
+ECHO_SRC += $(wildcard ./examples/echo/*.cc) 
+ECHO_SRC_MAIN += $(wildcard ./examples/echo/*.cpp)
+ECHO_OBJS += $(ECHO_SRC:.cc=.o) 
+ECHO_OBJS_MAIN += $(ECHO_SRC_MAIN:.cpp=.o)
+gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS) $(ECHO_OBJS_MAIN)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 #=============================================================
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

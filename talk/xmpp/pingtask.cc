@@ -18,11 +18,17 @@ PingTask::PingTask(buzz::XmppTaskParentInterface* parent,
       next_ping_time_(0),
       ping_response_deadline_(0) {
   ASSERT(ping_period_millis >= ping_timeout_millis);
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+}
+
+PingTask::~PingTask() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
 
 bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  LOG(LS_SENSITIVE) << stanza->Str();
   #if 1
-   LOG(LS_SENSITIVE) << stanza->Str();  
   if (!MatchResponseIq(stanza, Jid(STR_EMPTY), task_id())) {
     return false;
   }
@@ -41,7 +47,7 @@ bool PingTask::HandleStanza(const buzz::XmlElement* stanza) {
   return true;
 }
 
-XmlElement* PingTask::MakePingTo(const std::string& to)
+const XmlElement* PingTask::MakePingTo(const std::string& to)
 {
   XmlElement* result = new XmlElement(QN_IQ);
   result->AddAttr(QN_TYPE, STR_GET);
@@ -53,6 +59,7 @@ XmlElement* PingTask::MakePingTo(const std::string& to)
 // This task runs indefinitely and remains in either the start or blocked
 // states.
 int PingTask::ProcessStart() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   if (ping_period_millis_ < ping_timeout_millis_) {
     LOG(LS_ERROR) << "ping_period_millis should be >= ping_timeout_millis";
     return STATE_ERROR;
@@ -68,13 +75,14 @@ int PingTask::ProcessStart() {
   // If the ping timed out, signal.
   if (ping_response_deadline_ != 0 && now >= ping_response_deadline_) {
     SignalTimeout();
+    LOG(LS_SENSITIVE) << "Ping Timeout";
     return STATE_ERROR;
   }
-
+  LOG(LS_SENSITIVE) << "now:" << now << " next_ping_time_:" << next_ping_time_;
   // Send a ping if it's time.
   if (now >= next_ping_time_) {
     talk_base::scoped_ptr<buzz::XmlElement> stanza(
-        #if 1 
+        #if 1
         MakeIq(buzz::STR_GET, Jid(STR_EMPTY), task_id()));
         #else
      // add by henglinli@gmail.com
@@ -83,7 +91,9 @@ int PingTask::ProcessStart() {
         #endif
     stanza->AddElement(new buzz::XmlElement(QN_PING, true));
     SendStanza(stanza.get());
-    LOG(LS_SENSITIVE) << stanza->Str();
+   
+    LOG(LS_SENSITIVE) << now << " Send Ping ......";
+   
     ping_response_deadline_ = now + ping_timeout_millis_;
     next_ping_time_ = now + ping_period_millis_;
 
@@ -96,6 +106,7 @@ int PingTask::ProcessStart() {
 }
 
 void PingTask::OnMessage(talk_base::Message* msg) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // Get the task manager to run this task so we can send a ping or signal or
   // process a ping response.
   Wake();

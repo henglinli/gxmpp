@@ -48,18 +48,11 @@ namespace echo {
     virtual void OnXmppOpen();
     virtual void OnXmppClosed();
  private:
-    #if 1
-    talk_base::scoped_ptr<buzz::PingTask> ping_task_;    
-    // We send presence information through this object.  
-    talk_base::scoped_ptr<buzz::PresenceOutTask> presence_out_task_;
-    talk_base::scoped_ptr<echo::SendTask> send_task_;
-    talk_base::scoped_ptr<echo::ReceiveTask> receive_task_;
-    #else
-    buzz::PingTask ping_task_;
-    buzz::PresenceOutTask presence_out_task_;
-    echo::SendTask send_task_;
-    echo::ReceiveTask receive_task_;
-    #endif
+    buzz::PingTask *ping_task_;
+    buzz::PresenceOutTask *presence_out_task_;
+    echo::SendTask *send_task_;
+    echo::ReceiveTask *receive_task_;
+
     talk_base::MessageQueue message_queue_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };

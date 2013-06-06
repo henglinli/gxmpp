@@ -5,10 +5,17 @@
 
 namespace echo {
 // EchoThread::
-EchoThread::EchoThread() {
+EchoThread::EchoThread()
+    : ping_task_(NULL)
+    , presence_out_task_(NULL)
+    , send_task_(NULL)
+    , receive_task_(NULL)
+{
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
 
 EchoThread::~EchoThread() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
 buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& message) {
   // Make sure we are actually connected.
@@ -28,40 +35,43 @@ void EchoThread::OnXmppMessage(const buzz::Jid& from,
 void EchoThread::OnXmppOpen() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // presence out
-#if 1
-  presence_out_task_.reset(new buzz::PresenceOutTask(client()));  
+#define PRESENCEOUT
+#ifdef PRESENCEOUT
+  presence_out_task_ = new buzz::PresenceOutTask(client());  
   presence_out_task_->Start();      
   buzz::PresenceStatus presence_status;
   presence_status.set_jid(client()->jid());
   presence_status.set_available(true);
   presence_status.set_show(buzz::PresenceStatus::SHOW_ONLINE);
   presence_out_task_->Send(presence_status);
-#endif
+#endif //PRESENCEOUT
   // send
-#if 1
-  send_task_.reset(new echo::SendTask(client()));
+#define SEND
+#ifdef SEND
+  send_task_ = new echo::SendTask(client());
   send_task_->Start();
-#endif
+#endif //SEND
   // receive
-#if 1
-  receive_task_.reset(new echo::ReceiveTask(client()));
+#define RECEIVE
+#ifdef RECEIVE
+  receive_task_ = new echo::ReceiveTask(client());
   receive_task_->SignalReceived.connect(this, &EchoThread::OnXmppMessage);
   receive_task_->Start();
-#endif
+#endif // RECEIVE
   // ping
-#if 1
-  ping_task_.reset(new buzz::PingTask(client(), 
-                                      &message_queue_,
-                                      8800,
-                                      2400));
+#define RECEIVE
+#ifdef RECEIVE
+  ping_task_ = new buzz::PingTask(client(), 
+                                  &message_queue_,
+                                  8800,
+                                  2400);
   ping_task_->Start();
-#endif
+#endif // RECEIVE
 }
 
 void EchoThread::OnXmppClosed() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   LOG(LS_SENSITIVE) << "Error " << client()->GetError(NULL);
-  LOG(LS_SENSITIVE) << "IsDOne " << receive_task_->IsDone();
   // stop task_;
 }
 

@@ -47,6 +47,7 @@ class PingTask : public buzz::XmppTask, private talk_base::MessageHandler {
   PingTask(buzz::XmppTaskParentInterface* parent,
       talk_base::MessageQueue* message_queue, uint32 ping_period_millis,
       uint32 ping_timeout_millis);
+  virtual ~PingTask();
 
   virtual bool HandleStanza(const buzz::XmlElement* stanza);
   virtual int ProcessStart();
@@ -58,7 +59,7 @@ class PingTask : public buzz::XmppTask, private talk_base::MessageHandler {
  private:
   // Implementation of MessageHandler.
   virtual void OnMessage(talk_base::Message* msg);
-  XmlElement *MakePingTo(const std::string &to);
+  const XmlElement *MakePingTo(const std::string &to);
   talk_base::MessageQueue* message_queue_;
   uint32 ping_period_millis_;
   uint32 ping_timeout_millis_;
