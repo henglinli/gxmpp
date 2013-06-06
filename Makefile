@@ -6,19 +6,32 @@
 # Uncomment exactly one of the lines labelled (A), (B), and (C) below
 # to switch between compilation modes.
 
-OPT ?= -g -O0 -pipe -DLOGGING # (A) Production use (optimized mode)
+OPT ?= -g -O0 -pipe -D LOGGING # (A) Production use (optimized mode)
 # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
 # OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
 #-----------------------------------------------
 CC = clang
 CXX = clang++
 
-FLAGS += -DPOSIX -DLINUX -DEXPAT_RELATIVE_PATH 
+FLAGS += -D POSIX -D EXPAT_RELATIVE_PATH 
 CFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -DHAVE_MEMMOVE
 CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC
+LDFLAGS += 
+LIBS += 
 
-LDFLAGS += -pthread
-LIBS += -lrt
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	FLAGS += -D LINUX
+	LDFLAGS += -pthread
+	LIBS += -lrt
+endif
+ifeq ($(UNAME_S),Darwin)
+        FLAGS += -D OSX
+	LDFLAGS +=
+	LIBS +=  -lobjc -framework CoreFoundation -framework Cocoa
+	OSX_SRC += $(wildcard talk/base/*.mm)
+endif
+
 
 EXPAT_SRC += third_party/expat/lib/xmlparse.c \
 	third_party/expat/lib/xmlrole.c \
@@ -26,11 +39,15 @@ EXPAT_SRC += third_party/expat/lib/xmlparse.c \
 
 EXPAT_OBJS += $(EXPAT_SRC:.c=.o)
 
-SOURCES += $(wildcard ./talk/base/*.cc) \
-	$(wildcard ./talk/xmllite/*.cc) \
-	$(wildcard ./talk/xmpp/*.cc)
+SOURCES += $(wildcard talk/base/*.cc) \
+	$(wildcard talk/xmllite/*.cc) \
+	$(wildcard talk/xmpp/*.cc)
 
-LIBOBJECTS = $(SOURCES:.cc=.o) $(EXPAT_OBJS)
+COMMON_OBJS += $(SOURCES:.cc=.o)
+
+OSX_OBJS += $(OSX_SRC:.mm=.o)
+
+LIBOBJECTS = $(COMMON_OBJS) $(OSX_OBJS) $(EXPAT_OBJS)
 
 PROGRAMS = gxmpp_hello gxmpp_chat gxmpp_echo
 
@@ -71,6 +88,8 @@ gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS) $(ECHO_OBJS_MAIN)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 #=============================================================
+%.o : %.mm
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

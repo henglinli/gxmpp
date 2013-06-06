@@ -35,7 +35,7 @@
 //#include "talk/base/ssladapter.h"
 
 #ifdef OSX
-#include "talk/base/maccocoasocketserver.h"
+//#include "talk/base/maccocoasocketserver.h"
 #elif defined(WIN32)
 #include "talk/base/win32socketserver.h"
 #else
@@ -140,8 +140,8 @@ int main(int argc, char* argv[]) {
   talk_base::Win32Thread w32_thread;
   talk_base::ThreadManager::Instance()->SetCurrentThread(&w32_thread);
 #elif defined(OSX)
-  talk_base::MacCocoaSocketServer ss;
-  talk_base::SocketServerScope ss_scope(&ss);
+  // talk_base::MacCocoaSocketServer ss;
+  //talk_base::SocketServerScope ss_scope(&ss);
 #else
   talk_base::PhysicalSocketServer ss;
 #endif
