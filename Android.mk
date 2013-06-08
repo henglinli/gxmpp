@@ -76,7 +76,9 @@ LOCAL_C_INCLUDES += $(gxmpp_C_INCLUDES)
 
 LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS)
 
-LOCAL_SRC_FILES := $(wildcard examples/echo/*.cc) 
+LOCAL_LDLIBS := -llog
+
+LOCAL_SRC_FILES := $(wildcard examples/echo/*.cc) client.cc
 
 LOCAL_STATIC_LIBRARIES := gxmpp_static expat_static  
 
