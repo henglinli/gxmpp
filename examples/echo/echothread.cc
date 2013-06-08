@@ -10,6 +10,8 @@ EchoThread::EchoThread()
     , presence_out_task_(NULL)
     , send_task_(NULL)
     , receive_task_(NULL)
+    , message_queue_()
+    , xmpp_handler_(NULL)
 {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
@@ -17,6 +19,11 @@ EchoThread::EchoThread()
 EchoThread::~EchoThread() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
+
+void EchoThread::RegisterXmppHandler(XmppHandler *xmpp_handler) {
+  xmpp_handler_ = xmpp_handler;
+}
+
 buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& message) {
   // Make sure we are actually connected.
   if (client()->GetState() != buzz::XmppEngine::STATE_OPEN) {
@@ -30,6 +37,14 @@ void EchoThread::OnXmppMessage(const buzz::Jid& from,
                                const std::string& message) {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   LOG(LS_SENSITIVE) << message << " From " << from.Str() << " To " << to.Str();
+  if(xmpp_handler_) {
+    if(xmpp_handler_->Response()) {
+      std::string response = xmpp_handler_->OnXmppMessage(from, to, message);
+      Send(from, response);
+    } else {
+      xmpp_handler_->OnXmppMessage(from, to, message);
+    }
+  }
 }
 
 void EchoThread::OnXmppOpen() {
@@ -67,12 +82,18 @@ void EchoThread::OnXmppOpen() {
                                   2400);
   ping_task_->Start();
 #endif // RECEIVE
+  if(xmpp_handler_) {
+    xmpp_handler_->OnXmppOpen();
+  }
 }
 
 void EchoThread::OnXmppClosed() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   LOG(LS_SENSITIVE) << "Error " << client()->GetError(NULL);
   // stop task_;
+  if(xmpp_handler_) {
+    xmpp_handler_->OnXmppClosed(client()->GetError(NULL));
+  }
 }
 
 void EchoThread::OnStateChange(buzz::XmppEngine::State state) { 

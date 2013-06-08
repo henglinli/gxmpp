@@ -10,10 +10,10 @@ extern "C" {
 /*
  * Class:     cn_ikanke_Client
  * Method:    init
- * Signature: ()V
+ * Signature: (Lcn/ikanke/ClientHandler;)V
  */
 JNIEXPORT void JNICALL Java_cn_ikanke_Client_init
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jobject);
 
 /*
  * Class:     cn_ikanke_Client

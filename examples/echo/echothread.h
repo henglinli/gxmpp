@@ -33,13 +33,36 @@
 #include "sendtask.h"
 #include "receivetask.h"
 
-namespace echo {  
+namespace echo {
+  class XmppHandler {
+ public:
+    XmppHandler():response_(true) {};
+    ~XmppHandler() {};   
+    virtual std::string OnXmppMessage(const buzz::Jid& from,
+                                      const buzz::Jid& to,
+                                      const std::string& message) = 0;
+    virtual void OnXmppOpen() = 0;
+    virtual void OnXmppClosed(int error) = 0;
+    
+    inline void SetResponse(bool yes) {
+      response_ = yes;
+    }
+
+    inline bool Response() {
+      return response_;
+    }
+ private:
+    bool response_;
+    DISALLOW_EVIL_CONSTRUCTORS(XmppHandler);
+  };
+  
   class EchoThread : public buzz::XmppThread
       , public sigslot::has_slots<>
   {
  public:
     EchoThread();
     ~EchoThread();
+    void RegisterXmppHandler(XmppHandler *xmpp_handler);
     buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
     virtual void OnStateChange(buzz::XmppEngine::State state);
     virtual void OnXmppMessage(const buzz::Jid& from,
@@ -52,8 +75,8 @@ namespace echo {
     buzz::PresenceOutTask *presence_out_task_;
     echo::SendTask *send_task_;
     echo::ReceiveTask *receive_task_;
-
     talk_base::MessageQueue message_queue_;
+    XmppHandler *xmpp_handler_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };
 }
