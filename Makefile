@@ -82,9 +82,10 @@ gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
 
 ECHO_SRC += $(wildcard ./examples/echo/*.cc) 
 ECHO_SRC_MAIN += $(wildcard ./examples/echo/*.cpp)
-ECHO_OBJS += $(ECHO_SRC:.cc=.o) 
 ECHO_OBJS_MAIN += $(ECHO_SRC_MAIN:.cpp=.o)
-gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS) $(ECHO_OBJS_MAIN)
+ECHO_OBJS += $(ECHO_SRC:.cc=.o) $(ECHO_OBJS_MAIN)
+
+gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 #=============================================================
