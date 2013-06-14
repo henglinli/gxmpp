@@ -15,6 +15,7 @@
 #define  LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...) __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 #endif
+
 #if 0
 // 禁止使用拷贝构造函数和 operator= 赋值操作的宏
 // 应该类的 private: 中使用
@@ -22,6 +23,7 @@
   TypeName(const TypeName&);                    \
   void operator=(const TypeName&)
 #endif
+
 static const int kDefaultXmppPort = 5222;
 static talk_base::scoped_ptr<echo::EchoThread> kThread;
 class ClientHandler;
@@ -31,36 +33,83 @@ static JavaVM *kJavaVM = NULL;
 class ClientHandler : public echo::XmppHandler
 {
  public:
-  ClientHandler(JNIEnv *env, jclass clazz, jobject weakthis)
-    : clazz_(clazz)
-    , object_(weakthis)
-    , env_(env)
+  ClientHandler(jobject jhandler)
+      : handler_(jhandler)
   {
-   // nil
+    // nil
   };
   void Init() 
   {
-   jobject object = NULL;
-   object = env_->NewGlobalRef(object_);
-    if (NULL == object)
+    LOGD(__PRETTY_FUNCTION__);
+    JNIEnv *env = NULL;
+    jint status = JNI_ERR;
+    jboolean attached = false;
+    status = kJavaVM->GetEnv(reinterpret_cast<void**>(&env),
+                             JNI_VERSION_1_6);
+    if (JNI_OK != status) {
+      if (JNI_EDETACHED != status)
+      {
+        LOGE("GetEnv error: %d", status);
+        return;
+      }
+      status = kJavaVM->AttachCurrentThread(&env, NULL);
+      if (JNI_OK != status)
+      {
+        LOGE("AttachCurrentThread error: %d", status);
+        return;
+      }
+      attached = true;
+    }
+    jobject handler = NULL;
+    handler = env->NewGlobalRef(handler_);
+    if (NULL == handler)
     {
       LOGE("%s NewGlobalRef", __PRETTY_FUNCTION__);
       return;
     }
-    object_ = object;
-    jclass clazz = NULL;
-    clazz = static_cast<jclass>(env_->NewGlobalRef(clazz_));
-    if (NULL == clazz)
+    handler_ = handler;
+    if (attached)
     {
-      LOGE("%s NewGlobalRef", __PRETTY_FUNCTION__);
-      return;
+      status = kJavaVM->DetachCurrentThread();
+      if (JNI_OK != status) {
+        LOGE("DetachCurrentThread() error: %d", status);
+        return;
+      }
     }
-    clazz_ = clazz;
   }
   virtual ~ClientHandler() 
   {
-    env_->DeleteGlobalRef(object_);
-    env_->DeleteGlobalRef(clazz_);
+    LOGD(__PRETTY_FUNCTION__);
+    JNIEnv *env = NULL;
+    jint status = JNI_ERR;
+    jboolean attached = false;
+    status = kJavaVM->GetEnv(reinterpret_cast<void**>(&env),
+                             JNI_VERSION_1_6);
+    if (JNI_OK != status) {
+      if (JNI_EDETACHED != status)
+      {
+        LOGE("GetEnv error: %d", status);
+        return;
+      }
+      status = kJavaVM->AttachCurrentThread(&env, NULL);
+      if (JNI_OK != status)
+      {
+        LOGE("AttachCurrentThread error: %d", status);
+        return;
+      }
+      attached = true;
+    }
+   
+    env->DeleteGlobalRef(handler_);
+
+    if (attached)
+    {
+      status = kJavaVM->DetachCurrentThread();
+      if (JNI_OK != status) {
+        LOGE("DetachCurrentThread() error: %d", status);
+        return;
+      }
+    }
   };
   virtual std::string OnXmppMessage(const buzz::Jid& from,
                                     const buzz::Jid& to,
@@ -68,111 +117,102 @@ class ClientHandler : public echo::XmppHandler
     LOGD(__PRETTY_FUNCTION__);
     JNIEnv *env = NULL;
     jint status = JNI_ERR;
-    status = kJavaVM->AttachCurrentThread(&env, NULL);
-    if(JNI_OK != status) {
-      LOGE("AttachCurrentThread error: %d", status);
-      return std::string("AttachCurrentThread error");
+    jboolean attached = false;
+    status = kJavaVM->GetEnv(reinterpret_cast<void**>(&env),
+                             JNI_VERSION_1_6);
+    if (JNI_OK != status) {
+      if (JNI_EDETACHED != status)
+      {
+        LOGE("GetEnv error: %d", status);
+        return std::string("GetEnv error");
+      }
+      status = kJavaVM->AttachCurrentThread(&env, NULL);
+      if (JNI_OK != status)
+      {
+        LOGE("AttachCurrentThread error: %d", status);
+        return std::string("AttachCurrentThread error");
+      }
+      attached = true;
     }
-    LOGD("AttachCurrentThread done");
     jclass clazz = NULL;
-    clazz = env->FindClass("com/kanke/xmpp/CHandler");
+    clazz = env->GetObjectClass(handler_);
     if (NULL == clazz)
     {
       LOGD("FindClass error");
       return std::string("FindClass error");
     }
     jmethodID methodID = NULL;
-    methodID = env->GetMethodID(clazz_,
+    methodID = env->GetMethodID(clazz,
                                 "HandleMessage",
                                 "(Ljava/lang/String;)Ljava/lang/String;");
     if (NULL == methodID) {
       LOGE("GetMethodID error!");
       return std::string("GetMethodID error");
     }
-    LOGD("GetMethodID done");
+    //LOGD("GetMethodID done");
     const char *request = message.c_str();
     
     jstring jrequest = env->NewStringUTF(request);
-    LOGD("NewStringUTF done");
-    jobject object = NULL;
-    object = env->NewGlobalRef(object_);
-    if (NULL == object)
+    
+    jobject handler = NULL;
+    handler = env->NewGlobalRef(handler_);
+    if (NULL == handler)
     {
       LOGE("NewGlobalRef error");
       return std::string("NewGlobalRef error");
     }
-    LOGD("CallObjectMethod Start");
-    jobject obj = env->CallObjectMethod(object_, methodID, jrequest);
+    //LOGD("CallObjectMethod Start");
+    jobject obj = env->CallObjectMethod(handler, methodID, jrequest);
 
     jstring jresponse = static_cast<jstring>(obj);
     const char * response = env->GetStringUTFChars(jresponse, NULL);
     std::string Response(response);
     env->ReleaseStringUTFChars(jresponse, response);
 
-    env->DeleteGlobalRef(object);
-    status = kJavaVM->DetachCurrentThread();
-    if(JNI_OK != status) {
-      LOGE("DetachCurrentThread error: %d", status);
-      return std::string("DetachCurrentThread error");
+    env->DeleteGlobalRef(handler);
+    env->DeleteLocalRef(jrequest);
+    if (attached)
+    {
+      status = kJavaVM->DetachCurrentThread();
+      if (JNI_OK != status) {
+        LOGE("DetachCurrentThread error: %d", status);
+        return std::string("DetachCurrentThread error");
+      }
     }
-    LOGD("DetachCurrentThread done");
+
     return Response;
   }
   
   virtual void OnXmppOpen() {
-    
+    LOGD(__PRETTY_FUNCTION__);
   }
   
   virtual void OnXmppClosed(int error) {
-    
+    LOGD(__PRETTY_FUNCTION__);
   }
-private:
-  jclass clazz_;
-  jobject object_;
-  JNIEnv *env_;
+ private:
+  jobject handler_;
 };
 // Client
+
 /*
  * Class:     com_kanke_xmpp_Client
  * Method:    init
- * Signature: (Ljava/lang/ref/WeakReference;)V
+ * Signature: (Lcom/kanke/xmpp/ClientHandler;)V
  */
 JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_init
-  (JNIEnv *env, jobject thiz, jobject weakthis)
+(JNIEnv *, jobject, jobject jhandler)
 {
   LOGD(__PRETTY_FUNCTION__);
-#if 0
-  JNIEnv *env = NULL;
-  jint status = JNI_ERR;
-  status = kJavaVM->AttachCurrentThread(&env, NULL);
-  if(JNI_OK != status) {
-    LOGE("%s AttachCurrentThread error: %d", __PRETTY_FUNCTION__, status);
-    return;
-  }
-  LOGD("AttachCurrentThread done");
-  #endif 
-  jclass clazz = NULL;
-  clazz = env->GetObjectClass(thiz);
-  if (NULL == clazz)
-  {
-    LOGE("%s GetObjectClass error", __PRETTY_FUNCTION__);
-    return;
-  }
-  kClientHandler = new ClientHandler(env, clazz, weakthis);
+
+  kClientHandler = new ClientHandler(jhandler);
   kClientHandler->Init();
+  kClientHandler->SetResponse(false);
   // talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
   // Start xmpp on a different kThread
   kThread.reset(new echo::EchoThread);
   kThread->RegisterXmppHandler(kClientHandler);
   kThread->Start();
-  #if 0
-  status = kJavaVM->DetachCurrentThread();
-  if(JNI_OK != status) {
-    LOGE("%s DetachCurrentThread error: %d", __PRETTY_FUNCTION__, status);
-    return;
-  }
-  LOGD("DetachCurrentThread done");
-  #endif
 }
 /*
  * Class:     com_kanke_xmpp_Client
@@ -180,7 +220,7 @@ JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_init
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_finit
-(JNIEnv *env, jobject thiz)
+(JNIEnv *, jobject)
 {
   LOGD(__PRETTY_FUNCTION__);
   kThread.reset();
@@ -193,10 +233,10 @@ JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_finit
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_Login 
-(JNIEnv *env, jobject thiz, jstring jjid, jstring jpassword)
+(JNIEnv *env, jobject, jstring jjid, jstring jpassword)
 {
   LOGD(__PRETTY_FUNCTION__);
-
+  
   const char *jid = env->GetStringUTFChars(jjid, NULL);
   const char *password = env->GetStringUTFChars(jpassword, NULL);
 
@@ -220,8 +260,9 @@ JNIEXPORT void JNICALL Java_com_kanke_xmpp_Client_Login
   xcs.set_server(talk_base::SocketAddress(Jid.domain(), kDefaultXmppPort));
 
   kThread->Login(xcs);
+
   env->ReleaseStringUTFChars(jjid, jid);
-  env->ReleaseStringUTFChars(jpassword, password);  
+  env->ReleaseStringUTFChars(jpassword, password);
 }
 /*
  * Class:     com_kanke_xmpp_Client
@@ -270,7 +311,7 @@ JNIEXPORT jint JNICALL Java_com_kanke_xmpp_Client_SendMessage
 static const char * Client = "com/kanke/xmpp/Client";
 static JNINativeMethod ClientMethods[] = {
   {"init",
-   "(Ljava/lang/ref/WeakReference;)V",
+   "(Lcom/kanke/xmpp/ClientHandler;)V",
    (void *)Java_com_kanke_xmpp_Client_init},
   {"finit",
    "()V",
@@ -305,12 +346,6 @@ static int registerNatives(JNIEnv* env) {
                              sizeof(ClientMethods)/sizeof(ClientMethods[0]))) {
     return JNI_FALSE;
   }
-  /*
-    if (!registerNativeMethods(env, Registration, RegistrationMethods,
-    sizeof(RegistrationMethods)/sizeof(RegistrationMethods[0]))) {
-    return JNI_FALSE;
-    }
-  */
   return JNI_TRUE;
 }
 
