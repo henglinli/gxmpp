@@ -232,7 +232,6 @@ XmppLoginTask::Advance() {
           // Allow login with either the non-google id or the friendly email.
           auth->SetAttr(QN_GOOGLE_AUTH_CLIENT_USES_FULL_BIND_RESULT, "true");
         }
-
         pctx_->InternalSendStanza(auth);
         delete auth;
         state_ = LOGINSTATE_SASL_RUNNING;

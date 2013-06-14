@@ -183,6 +183,11 @@ class XmppEngineImpl : public XmppEngine {
   //! gets its own unique id.
   virtual std::string NextId();
 
+  virtual void AllowGtalkLoginWithUserDomain();
+
+#ifdef IOS_XMPP_FRAMEWORK
+  void SignalBound(const Jid& fullJid);
+#endif
  private:
   friend class XmppLoginTask;
   friend class XmppIqEntry;
@@ -196,7 +201,9 @@ class XmppEngineImpl : public XmppEngine {
   std::string ChooseBestSaslMechanism(
       const std::vector<std::string>& mechanisms, bool encrypted);
   SaslMechanism* GetSaslMechanism(const std::string& name);
+#ifndef IOS_XMPP_FRAMEWORK
   void SignalBound(const Jid& fullJid);
+#endif
   void SignalStreamError(const XmlElement* streamError);
   void SignalError(Error errorCode, int subCode);
   bool HasError();

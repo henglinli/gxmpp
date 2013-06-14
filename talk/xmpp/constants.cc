@@ -58,6 +58,8 @@ const char NS_VCARD_UPDATE[] = "vcard-temp:x:update";
 const char STR_CLIENT[] = "client";
 const char STR_SERVER[] = "server";
 const char STR_STREAM[] = "stream";
+const char STR_PRESIN4[] = "presin4";
+const char STR_DENY_ALL_PRESIN_AND_MESSAGE[] = "deny_all_presin_and_message";
 
 const char STR_GET[] = "get";
 const char STR_SET[] = "set";
@@ -198,6 +200,12 @@ const StaticQName QN_GOOGLE_ALLOW_NON_GOOGLE_ID_XMPP_LOGIN =
 const StaticQName QN_GOOGLE_AUTH_SERVICE =
     { NS_GOOGLE_AUTH_PROTOCOL, "service" };
 
+// Tuenti tags
+const char NS_TUENTI[] = "http://tuenti.com/jabber";
+const StaticQName QN_TUENTI_DATA = { NS_TUENTI, "tuentidata" };
+const StaticQName QN_TUENTI_CAPS = { NS_TUENTI, "capabilities" };
+const StaticQName QN_TUENTI_VOICE = { NS_TUENTI, "voip" };
+
 const StaticQName QN_DIALBACK_RESULT = { NS_DIALBACK, "result" };
 const StaticQName QN_DIALBACK_VERIFY = { NS_DIALBACK, "verify" };
 
@@ -239,6 +247,9 @@ const StaticQName QN_STANZA_TEXT = { NS_STANZA, "text" };
 const StaticQName QN_BIND_BIND = { NS_BIND, "bind" };
 const StaticQName QN_BIND_RESOURCE = { NS_BIND, "resource" };
 const StaticQName QN_BIND_JID = { NS_BIND, "jid" };
+
+const StaticQName QN_REQUEST = { NS_MSG_RECEIPTS, "request" };
+const StaticQName QN_RECEIVED = { NS_MSG_RECEIPTS, "received" };
 
 const StaticQName QN_MESSAGE = { NS_CLIENT, "message" };
 const StaticQName QN_BODY = { NS_CLIENT, "body" };
@@ -403,6 +414,9 @@ const StaticQName QN_DISCO_FEATURE = { NS_DISCO_INFO, "feature" };
 
 const StaticQName QN_DISCO_ITEMS_QUERY = { NS_DISCO_ITEMS, "query" };
 const StaticQName QN_DISCO_ITEM = { NS_DISCO_ITEMS, "item" };
+
+// JEP 0184
+const char NS_MSG_RECEIPTS[] = "urn:xmpp:receipts";
 
 // JEP 0020
 const char NS_FEATURE[] = "http://jabber.org/protocol/feature-neg";

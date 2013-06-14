@@ -52,7 +52,7 @@ void EchoThread::OnXmppOpen() {
   // presence out
 #define PRESENCEOUT
 #ifdef PRESENCEOUT
-  presence_out_task_ = new buzz::PresenceOutTask(client());  
+  presence_out_task_ = new buzz::PresenceOutTask(client());
   presence_out_task_->Start();      
   buzz::PresenceStatus presence_status;
   presence_status.set_jid(client()->jid());
@@ -77,7 +77,7 @@ void EchoThread::OnXmppOpen() {
 #define RECEIVE
 #ifdef RECEIVE
   ping_task_ = new buzz::PingTask(client(), 
-                                  &message_queue_,
+                                  talk_base::Thread::Current(),
                                   8800,
                                   2400);
   ping_task_->Start();

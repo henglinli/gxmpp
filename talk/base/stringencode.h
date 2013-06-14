@@ -32,8 +32,6 @@
 #include <sstream>
 #include <vector>
 
-#include "talk/base/common.h"
-
 namespace talk_base {
 
 //////////////////////////////////////////////////////////////////////
@@ -184,25 +182,23 @@ size_t tokenize(const std::string& source, char delimiter, char start_mark,
 
 template <class T>
 static bool ToString(const T &t, std::string* s) {
-  ASSERT(NULL != s);
   std::ostringstream oss;
-  oss << std::boolalpha << t;
+  oss << t;
   *s = oss.str();
   return !oss.fail();
 }
 
 template <class T>
 static bool FromString(const std::string& s, T* t) {
-  ASSERT(NULL != t);
   std::istringstream iss(s);
-  iss >> std::boolalpha >> *t;
+  iss >> *t;
   return !iss.fail();
 }
 
 // Inline versions of the string conversion routines.
 
 template<typename T>
-static inline std::string ToString(const T& val) {
+static inline std::string ToString(T val) {
   std::string str; ToString(val, &str); return str;
 }
 

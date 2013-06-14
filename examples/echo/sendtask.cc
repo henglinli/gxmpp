@@ -27,7 +27,7 @@
 
 #include "talk/xmpp/constants.h"
 #include "talk/xmpp/xmppengine.h"
-
+#include "talk/base/logging.h"
 #include "sendtask.h"
 namespace echo {
 SendTask::SendTask(XmppTaskParentInterface* parent)
@@ -36,6 +36,7 @@ SendTask::SendTask(XmppTaskParentInterface* parent)
 
 SendTask::~SendTask() {
   Stop();
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
 }
 
 buzz::XmppReturnStatus SendTask::Send(const buzz::Jid& to,

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "talk/base/physicalsocketserver.h"
 #include "talk/base/cryptstring.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/xmppclientsettings.h"
@@ -26,6 +27,7 @@ int main(int argc, char* argv[]) {
   bool reconnect = true;
   while (reconnect) {
     // Start xmpp on a different thread
+    talk_base::PhysicalSocketServer ss;
     echo::EchoThread thread;
     thread.Start();
 

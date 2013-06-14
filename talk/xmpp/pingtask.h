@@ -47,10 +47,10 @@ class PingTask : public buzz::XmppTask, private talk_base::MessageHandler {
   PingTask(buzz::XmppTaskParentInterface* parent,
       talk_base::MessageQueue* message_queue, uint32 ping_period_millis,
       uint32 ping_timeout_millis);
-  virtual ~PingTask();
 
   virtual bool HandleStanza(const buzz::XmlElement* stanza);
   virtual int ProcessStart();
+  void PingNow();
 
   // Raised if there is no response to a ping within ping_timeout_millis.
   // The task is automatically aborted after a timeout.
@@ -59,12 +59,14 @@ class PingTask : public buzz::XmppTask, private talk_base::MessageHandler {
  private:
   // Implementation of MessageHandler.
   virtual void OnMessage(talk_base::Message* msg);
-  const XmlElement *MakePingTo(const std::string &to);
+  void SendPing(uint32 now);
+
   talk_base::MessageQueue* message_queue_;
   uint32 ping_period_millis_;
   uint32 ping_timeout_millis_;
   uint32 next_ping_time_;
   uint32 ping_response_deadline_; // 0 if the response has been received
+  bool pinging_;
 };
 
 } // namespace buzz
