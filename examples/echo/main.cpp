@@ -7,7 +7,30 @@
 
 const int kDefaultXmppPort = 5222;
 
+class Handler: public echo::XmppHandler
+{
+  std::string OnXmppMessage(const buzz::Jid& from,
+                                      const buzz::Jid& to,
+                                      const std::string& message)
+  {
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+    LOG(LS_SENSITIVE) << message << " From " << from.Str() << " To " << to.Str();
+    return message;
+  }
+  void OnXmppOpen()
+  {
+      LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  }
+  void OnXmppClosed(int error)
+  {
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+    LOG(LS_SENSITIVE) << "Error " << error;
+  }
+};
+
 int main(int argc, char* argv[]) {
+  Handler handler;
+
   if (argc != 3) {
     std::cout << argv[0] << " jid password" << std::endl;
     return -1;
@@ -40,6 +63,7 @@ int main(int argc, char* argv[]) {
     //xcs.set_use_tls(buzz::TLS_DISABLED);
     xcs.set_server(talk_base::SocketAddress(jid.domain(), kDefaultXmppPort));
 
+    thread.RegisterXmppHandler(&handler);
     thread.Login(xcs);
 
     // Use main thread for console input

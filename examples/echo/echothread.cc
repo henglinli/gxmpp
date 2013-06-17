@@ -35,8 +35,6 @@ buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& 
 void EchoThread::OnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
                                const std::string& message) {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  LOG(LS_SENSITIVE) << message << " From " << from.Str() << " To " << to.Str();
   if(xmpp_handler_) {
     if(xmpp_handler_->Response()) {
       std::string response = xmpp_handler_->OnXmppMessage(from, to, message);
@@ -48,7 +46,6 @@ void EchoThread::OnXmppMessage(const buzz::Jid& from,
 }
 
 void EchoThread::OnXmppOpen() {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // presence out
 #define PRESENCEOUT
 #ifdef PRESENCEOUT
@@ -88,9 +85,6 @@ void EchoThread::OnXmppOpen() {
 }
 
 void EchoThread::OnXmppClosed() {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  LOG(LS_SENSITIVE) << "Error " << client()->GetError(NULL);
-  // stop task_;
   if(xmpp_handler_) {
     xmpp_handler_->OnXmppClosed(client()->GetError(NULL));
   }
