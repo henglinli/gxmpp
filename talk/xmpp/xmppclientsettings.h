@@ -31,7 +31,7 @@
 #include "talk/base/proxyinfo.h"
 #include "talk/xmpp/xmppengine.h"
 
-// add by henglinli@gmail.com 2013-05-27
+ // add by henglinli@gmail.com 2013-05-27
 namespace cricket {
 enum ProtocolType {
   PROTO_UDP,
@@ -60,7 +60,6 @@ class XmppUserSettings {
   }
   void set_resource(const std::string& resource) { resource_ = resource; }
   void set_use_tls(const TlsOptions use_tls) { use_tls_ = use_tls; }
-  void set_allow_gtalk_username_custom_domain(bool b) { allow_gtalk_username_custom_domain_ = b; }
   void set_allow_plain(bool f) { allow_plain_ = f; }
   void set_test_server_domain(const std::string& test_server_domain) {
     test_server_domain_ = test_server_domain;
@@ -79,7 +78,6 @@ class XmppUserSettings {
   bool allow_plain() const { return allow_plain_; }
   const std::string& test_server_domain() const { return test_server_domain_; }
   const std::string& token_service() const { return token_service_; }
-  bool allow_gtalk_username_custom_domain() const { return allow_gtalk_username_custom_domain_; }
 
  private:
   std::string user_;
@@ -89,7 +87,6 @@ class XmppUserSettings {
   std::string auth_token_;
   std::string resource_;
   TlsOptions use_tls_;
-  bool allow_gtalk_username_custom_domain_;
   bool allow_plain_;
   std::string test_server_domain_;
   std::string token_service_;

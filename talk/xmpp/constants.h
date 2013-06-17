@@ -34,7 +34,6 @@
 
 namespace buzz {
 
-extern const char NS_MSG_RECEIPTS[];
 extern const char NS_CLIENT[];
 extern const char NS_SERVER[];
 extern const char NS_STREAM[];
@@ -53,8 +52,6 @@ extern const char NS_VCARD_UPDATE[];
 extern const char STR_CLIENT[];
 extern const char STR_SERVER[];
 extern const char STR_STREAM[];
-extern const char STR_PRESIN4[];
-extern const char STR_DENY_ALL_PRESIN_AND_MESSAGE[];
 
 extern const char STR_GET[];
 extern const char STR_SET[];
@@ -173,12 +170,6 @@ extern const StaticQName QN_GOOGLE_AUTH_CLIENT_USES_FULL_BIND_RESULT;
 extern const StaticQName QN_GOOGLE_ALLOW_NON_GOOGLE_ID_XMPP_LOGIN;
 extern const StaticQName QN_GOOGLE_AUTH_SERVICE;
 
-// Tuenti non-standard
-extern const char NS_TUENTI[];
-extern const StaticQName QN_TUENTI_DATA;
-extern const StaticQName QN_TUENTI_CAPS;
-extern const StaticQName QN_TUENTI_VOICE;
-
 extern const StaticQName QN_DIALBACK_RESULT;
 extern const StaticQName QN_DIALBACK_VERIFY;
 
@@ -208,9 +199,6 @@ extern const StaticQName QN_STANZA_TEXT;
 extern const StaticQName QN_BIND_BIND;
 extern const StaticQName QN_BIND_RESOURCE;
 extern const StaticQName QN_BIND_JID;
-
-extern const StaticQName QN_REQUEST;
-extern const StaticQName QN_RECEIVED;
 
 extern const StaticQName QN_MESSAGE;
 extern const StaticQName QN_BODY;

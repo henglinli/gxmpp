@@ -136,7 +136,8 @@ void MessageQueue::set_socketserver(SocketServer* ss) {
 }
 
 void MessageQueue::Quit() {
-  Post(NULL, MQID_QUIT);
+  fStop_ = true;
+  ss_->WakeUp();
 }
 
 bool MessageQueue::IsQuitting() {
@@ -177,48 +178,59 @@ bool MessageQueue::Get(Message *pmsg, int cmsWait, bool process_io) {
   uint32 msCurrent = msStart;
   while (true) {
     // Check for sent messages
-
     ReceiveSends();
 
-    // Check queues
-
+    // Check for posted events
     int cmsDelayNext = kForever;
-    {
-      CritScope cs(&crit_);
-
-      // Check for delayed messages that have been triggered
-      // Calc the next trigger too
-
-      while (!dmsgq_.empty()) {
-        if (TimeIsLater(msCurrent, dmsgq_.top().msTrigger_)) {
-          cmsDelayNext = TimeDiff(dmsgq_.top().msTrigger_, msCurrent);
-          break;
-        }
-        msgq_.push_back(dmsgq_.top().msg_);
-        dmsgq_.pop();
-      }
-
-      // Check for posted events
-      while (!msgq_.empty()) {
-        *pmsg = msgq_.front();
-        if (pmsg->ts_sensitive) {
-          long delay = TimeDiff(msCurrent, pmsg->ts_sensitive);
-          if (delay > 0) {
-            LOG_F(LS_WARNING) << "id: " << pmsg->message_id << "  delay: "
-                              << (delay + kMaxMsgLatency) << "ms";
+    bool first_pass = true;
+    while (true) {
+      // All queue operations need to be locked, but nothing else in this loop
+      // (specifically handling disposed message) can happen inside the crit.
+      // Otherwise, disposed MessageHandlers will cause deadlocks.
+      {
+        CritScope cs(&crit_);
+        // On the first pass, check for delayed messages that have been
+        // triggered and calculate the next trigger time.
+        if (first_pass) {
+          first_pass = false;
+          while (!dmsgq_.empty()) {
+            if (TimeIsLater(msCurrent, dmsgq_.top().msTrigger_)) {
+              cmsDelayNext = TimeDiff(dmsgq_.top().msTrigger_, msCurrent);
+              break;
+            }
+            msgq_.push_back(dmsgq_.top().msg_);
+            dmsgq_.pop();
           }
         }
-        msgq_.pop_front();
-        if (MQID_DISPOSE == pmsg->message_id) {
-          ASSERT(NULL == pmsg->phandler);
-          delete pmsg->pdata;
-          continue;
-        } else if (MQID_QUIT == pmsg->message_id){
-          return false;
+        // Pull a message off the message queue, if available.
+        if (msgq_.empty()) {
+          break;
+        } else {
+          *pmsg = msgq_.front();
+          msgq_.pop_front();
         }
-        return true;
+      }  // crit_ is released here.
+
+      // Log a warning for time-sensitive messages that we're late to deliver.
+      if (pmsg->ts_sensitive) {
+        int32 delay = TimeDiff(msCurrent, pmsg->ts_sensitive);
+        if (delay > 0) {
+          LOG_F(LS_WARNING) << "id: " << pmsg->message_id << "  delay: "
+                            << (delay + kMaxMsgLatency) << "ms";
+        }
       }
+      // If this was a dispose message, delete it and skip it.
+      if (MQID_DISPOSE == pmsg->message_id) {
+        ASSERT(NULL == pmsg->phandler);
+        delete pmsg->pdata;
+        *pmsg = Message();
+        continue;
+      }
+      return true;
     }
+
+    if (fStop_)
+      break;
 
     // Which is shorter, the delay wait or the asked wait?
 
@@ -252,15 +264,14 @@ void MessageQueue::ReceiveSends() {
 
 void MessageQueue::Post(MessageHandler *phandler, uint32 id,
     MessageData *pdata, bool time_sensitive) {
-  // Keep thread safe
-  CritScope cs(&crit_);
   if (fStop_)
     return;
-  if (id == MQID_QUIT)
-    fStop_ = true;
 
+  // Keep thread safe
   // Add the message to the end of the queue
   // Signal for the multiplexer to return
+
+  CritScope cs(&crit_);
   EnsureActive();
   Message msg;
   msg.phandler = phandler;
@@ -275,15 +286,14 @@ void MessageQueue::Post(MessageHandler *phandler, uint32 id,
 
 void MessageQueue::DoDelayPost(int cmsDelay, uint32 tstamp,
     MessageHandler *phandler, uint32 id, MessageData* pdata) {
-  // Keep thread safe
-  CritScope cs(&crit_);
   if (fStop_)
     return;
-  if (id == MQID_QUIT)
-    fStop_ = true;
 
+  // Keep thread safe
   // Add to the priority queue. Gets sorted soonest first.
   // Signal for the multiplexer to return.
+
+  CritScope cs(&crit_);
   EnsureActive();
   Message msg;
   msg.phandler = phandler;

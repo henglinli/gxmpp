@@ -52,11 +52,7 @@ XmppEngineImpl::XmppEngineImpl()
       password_(),
       requested_resource_(STR_EMPTY),
       tls_option_(buzz::TLS_REQUIRED),
-#ifdef IOS_XMPP_FRAMEWORK
-      login_task_(NULL),
-#else
       login_task_(new XmppLoginTask(this)),
-#endif
       next_id_(0),
       state_(STATE_START),
       encrypted_(false),
@@ -282,10 +278,6 @@ XmppReturnStatus XmppEngineImpl::Disconnect() {
   return XMPP_RETURN_OK;
 }
 
-void XmppEngineImpl::AllowGtalkLoginWithUserDomain(){
-	login_task_->set_allow_non_google_login(true);
-}
-
 void XmppEngineImpl::IncomingStart(const XmlElement* start) {
   if (HasError() || raised_reset_)
     return;
@@ -297,10 +289,8 @@ void XmppEngineImpl::IncomingStart(const XmlElement* start) {
       login_task_.reset();
   }
   else {
-#ifndef IOS_XMPP_FRAMEWORK
     // if not logging in, it's an error to see a start
     SignalError(ERROR_XML, 0);
-#endif
   }
 }
 
