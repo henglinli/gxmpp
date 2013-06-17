@@ -34,13 +34,14 @@
 #include "receivetask.h"
 
 namespace echo {
-  class XmppHandler {
+  class XmppHandler : public sigslot::has_slots<> {
  public:
     XmppHandler():response_(true) {};
     ~XmppHandler() {};   
-    virtual std::string OnXmppMessage(const buzz::Jid& from,
-                                      const buzz::Jid& to,
-                                      const std::string& message) = 0;
+    virtual void OnXmppMessage(const buzz::Jid& from,
+                               const buzz::Jid& to,
+                               const std::string& message,
+                               std::string* response) = 0;
     virtual void OnXmppOpen() = 0;
     virtual void OnXmppClosed(int error) = 0;
     
@@ -62,6 +63,14 @@ namespace echo {
  public:
     EchoThread();
     ~EchoThread();
+    // Slot for chat message callbacks
+    sigslot::signal4<const buzz::Jid&,
+        const buzz::Jid&,
+        const std::string&,
+        std::string*> SignalXmppMessage;
+    sigslot::signal0<> SignalXmppOpen;
+    sigslot::signal1<int> SignalXmppClosed;
+    
     void RegisterXmppHandler(XmppHandler *xmpp_handler);
     buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
     virtual void OnStateChange(buzz::XmppEngine::State state);

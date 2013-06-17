@@ -22,6 +22,9 @@ EchoThread::~EchoThread() {
 
 void EchoThread::RegisterXmppHandler(XmppHandler *xmpp_handler) {
   xmpp_handler_ = xmpp_handler;
+  SignalXmppMessage.connect(xmpp_handler_, &XmppHandler::OnXmppMessage);
+  SignalXmppOpen.connect(xmpp_handler_, &XmppHandler::OnXmppOpen);
+  SignalXmppClosed.connect(xmpp_handler_, &XmppHandler::OnXmppClosed);
 }
 
 buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& message) {
@@ -36,11 +39,11 @@ void EchoThread::OnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
                                const std::string& message) {
   if(xmpp_handler_) {
-    if(xmpp_handler_->Response()) {
-      std::string response = xmpp_handler_->OnXmppMessage(from, to, message);
+    std::string response;
+    //xmpp_handler_->OnXmppMessage(from, to, message, response);
+    SignalXmppMessage(from, to, message, response);
+    if(xmpp_handler_->Response()) { 
       Send(from, response);
-    } else {
-      xmpp_handler_->OnXmppMessage(from, to, message);
     }
   }
 }
@@ -80,13 +83,15 @@ void EchoThread::OnXmppOpen() {
   ping_task_->Start();
 #endif // RECEIVE
   if(xmpp_handler_) {
-    xmpp_handler_->OnXmppOpen();
+    //xmpp_handler_->OnXmppOpen();
+    SignalXmppOpen();
   }
 }
 
 void EchoThread::OnXmppClosed() {
   if(xmpp_handler_) {
-    xmpp_handler_->OnXmppClosed(client()->GetError(NULL));
+    //xmpp_handler_->OnXmppClosed(client()->GetError(NULL));
+    SignalXmppClosed(client()->GetError(NULL));
   }
 }
 
