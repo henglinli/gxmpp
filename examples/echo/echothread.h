@@ -27,7 +27,11 @@
 #ifndef _ECHO_XMPPTHREAD_H_
 #define _ECHO_XMPPTHREAD_H_
 
-#include "talk/xmpp/xmppthread.h"
+#include "talk/base/thread.h"
+#include "talk/xmpp/xmppclientsettings.h"
+#include "talk/xmpp/xmppengine.h"
+#include "talk/xmpp/xmpppump.h"
+#include "talk/xmpp/xmppsocket.h"
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
 #include "sendtask.h"
@@ -38,12 +42,12 @@ namespace echo {
  public:
     XmppHandler():response_(true) {};
     ~XmppHandler() {};   
-    virtual void OnXmppMessage(const buzz::Jid& from,
+    virtual void DoOnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
                                const std::string& message,
                                std::string* response) = 0;
-    virtual void OnXmppOpen() = 0;
-    virtual void OnXmppClosed(int error) = 0;
+    virtual void DoOnXmppOpen() = 0;
+    virtual void DoOnXmppClosed(int error) = 0;
     
     inline void SetResponse(bool yes) {
       response_ = yes;
@@ -57,12 +61,13 @@ namespace echo {
     DISALLOW_EVIL_CONSTRUCTORS(XmppHandler);
   };
   
-  class EchoThread : public buzz::XmppThread
-      , public sigslot::has_slots<>
+  class EchoThread
+     : public talk_base::Thread
+     , public talk_base::MessageHandler 
+     , public buzz::XmppPumpNotify
+     , public sigslot::has_slots<>
   {
  public:
-    EchoThread();
-    ~EchoThread();
     // Slot for chat message callbacks
     sigslot::signal4<const buzz::Jid&,
         const buzz::Jid&,
@@ -70,22 +75,40 @@ namespace echo {
         std::string*> SignalXmppMessage;
     sigslot::signal0<> SignalXmppOpen;
     sigslot::signal1<int> SignalXmppClosed;
+ public:
+    EchoThread();
+    ~EchoThread();
+   
+    inline buzz::XmppClient* client() { return xmpp_pump_->client(); }
+
+    void ProcessMessages(int cms);
+    
+    void Login(const buzz::XmppClientSettings & xcs);
+    buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
+    void Disconnect();
     
     void RegisterXmppHandler(XmppHandler *xmpp_handler);
-    buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
+ private:
+    void RemoveXmppHandler();
     virtual void OnStateChange(buzz::XmppEngine::State state);
     virtual void OnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
                                const std::string& message);
     virtual void OnXmppOpen();
+    virtual void OnXmppSocketClose(int state);
     virtual void OnXmppClosed();
+    virtual void OnMessage(talk_base::Message* pmsg);
+    virtual void OnPingTimeout();
  private:
+    talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
     buzz::PingTask *ping_task_;
     buzz::PresenceOutTask *presence_out_task_;
     echo::SendTask *send_task_;
     echo::ReceiveTask *receive_task_;
     talk_base::MessageQueue message_queue_;
     XmppHandler *xmpp_handler_;
+    buzz::XmppSocket *socket_;
+    bool socket_closed_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };
 }
