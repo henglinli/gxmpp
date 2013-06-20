@@ -39,6 +39,7 @@ XmppPump::XmppPump(XmppPumpNotify * notify) {
 }
 
 XmppPump::~XmppPump () {
+  // nil
 }
 
 void XmppPump::DoLogin(const buzz::XmppClientSettings & xcs) {
@@ -60,6 +61,7 @@ void XmppPump::DoLogin(const buzz::XmppClientSettings & xcs) {
     client_->Start();
   }
 }
+
 void XmppPump::DoDisconnect() {
   talk_base::CritScope lock(&disconnect_cs_);
   if (!disconnecting_  && !AllChildrenDone()) {
@@ -75,14 +77,12 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
     return;
   }
   state_ = state;
-  if (notify_ != NULL)
+  if (notify_ != NULL) {
     notify_->OnStateChange(state);
+  }
 }
 
 void XmppPump::OnXmppSocketClose(int state) {
-  if (notify_ != NULL) {
-    notify_->OnXmppSocketClose(state);
-  }
   //Extra clean up for a socket close that wasn't originated by a logout.
   if (!disconnecting_ && state_ != buzz::XmppEngine::STATE_CLOSED) {
     DoDisconnect();
@@ -107,5 +107,4 @@ buzz::XmppReturnStatus XmppPump::SendStanza(const buzz::XmlElement *stanza) {
   }
   return buzz::XMPP_RETURN_BADSTATE;
 }
-
 }  // namespace echo

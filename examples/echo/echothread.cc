@@ -1,4 +1,5 @@
 #include "talk/xmpp/xmppauth.h"
+#include "talk/xmpp/xmppsocket.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/pingtask.h"
 #include "receivetask.h"
@@ -13,30 +14,29 @@ const uint32 MSG_XMPPOPEN = 3;
 const uint32 MSG_XMPPMESSAGE = 4;
 const uint32 MSG_XMPPCLOSED = 5;
 
-struct LoginData: public talk_base::MessageData {
-  LoginData(const buzz::XmppClientSettings& s) : xcs(s) {}
-  virtual ~LoginData() {}
-
-  buzz::XmppClientSettings xcs;
-};
-
+buzz::XmppClientSettings xcs_;
+buzz::XmppEngine::Error error_;
+buzz::Jid from_;
+buzz::Jid to_;
+std::string message_;
+std::string response_;
 } // namespace
 
 // EchoThread::
 EchoThread::EchoThread()
     : ping_task_(NULL)
+    , signal_ping_task_(false)
     , presence_out_task_(NULL)
     , send_task_(NULL)
     , receive_task_(NULL)
+    , signal_receive_task_(false)
     , message_queue_()
-    , xmpp_handler_(NULL)
-    , socket_(NULL)
-    , socket_closed_(false) {
+    , xmpp_handler_(NULL) {
   //nil
 }
 
 EchoThread::~EchoThread() {
-  RemoveXmppHandler();
+  // nil
 }
 
 void EchoThread::ProcessMessages(int cms) {
@@ -46,7 +46,8 @@ void EchoThread::ProcessMessages(int cms) {
 
 void EchoThread::Login(const buzz::XmppClientSettings& xcs) {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  Post(this, MSG_LOGIN, new LoginData(xcs));
+  xcs_ = xcs;
+  Post(this, MSG_LOGIN);
 }
 
 void EchoThread::Disconnect() {
@@ -55,34 +56,38 @@ void EchoThread::Disconnect() {
 }
 
 void EchoThread::OnMessage(talk_base::Message* pmsg) {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   switch(pmsg->message_id) {
     case MSG_LOGIN : {
       LOG(LS_SENSITIVE) << "MSG_LOGIN";
-      xmpp_pump_.reset(new buzz::XmppPump(this));
-      ASSERT(pmsg->pdata != NULL);
-      LoginData* data = reinterpret_cast<LoginData*>(pmsg->pdata);
-      socket_ = new buzz::XmppSocket(buzz::TLS_DISABLED);
-      xmpp_pump_->DoLogin(data->xcs,
-                          socket_,
-                          new XmppAuth);
-      //socket_->SignalCloseEvent.connect(this, &EchoThread::OnXmppSocketClose);
-      delete data;
+     
+      #ifndef SELF_XMPP_PUMP
+       xmpp_pump_.reset(new buzz::XmppPump(this));
+
+      xmpp_pump_->DoLogin(xcs_, new buzz::XmppSocket(xcs_.use_tls()), new XmppAuth);
+      #else
+       xmpp_pump_.reset(new XmppPump(this));
+      xmpp_pump_->DoLogin(xcs_);
+      #endif
       break;
     }
     case MSG_DISCONNECT : {
       LOG(LS_SENSITIVE) << "MSG_DISCONNECT";
       xmpp_pump_->DoDisconnect();
-      socket_ = NULL;
       break;
     }
     case MSG_XMPPOPEN : {
+      LOG(LS_SENSITIVE) << "MSG_XMPPOPEN";
+      OnXmppOpen();
       break;
     }
     case MSG_XMPPMESSAGE : {
+      LOG(LS_SENSITIVE) << "MSG_XMPPMESSAGE";
+      OnXmppMessage();
       break;
     }
     case MSG_XMPPCLOSED : {
+      LOG(LS_SENSITIVE) << "MSG_XMPPCLOSED";
+      OnXmppClosed();
       break;
     }
     default : {
@@ -92,20 +97,10 @@ void EchoThread::OnMessage(talk_base::Message* pmsg) {
 }
 
 void EchoThread::RegisterXmppHandler(XmppHandler *xmpp_handler) {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   xmpp_handler_ = xmpp_handler;
-  SignalXmppMessage.connect(xmpp_handler_, &XmppHandler::DoOnXmppMessage);
-  SignalXmppOpen.connect(xmpp_handler_, &XmppHandler::DoOnXmppOpen);
-  SignalXmppClosed.connect(xmpp_handler_, &XmppHandler::DoOnXmppClosed);
-}
-
-void EchoThread::RemoveXmppHandler()
-{
-  if (xmpp_handler_)
-  {
-    SignalXmppMessage.disconnect(xmpp_handler_);
-    SignalXmppOpen.disconnect(xmpp_handler_);
-    SignalXmppClosed.disconnect(xmpp_handler_);
+  if (xmpp_handler_) {
+    SignalXmppOpen.connect(xmpp_handler_, &XmppHandler::DoOnXmppOpen);
+    SignalXmppClosed.connect(xmpp_handler_, &XmppHandler::DoOnXmppClosed);
   }
 }
 
@@ -120,15 +115,22 @@ buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& 
 
 void EchoThread::OnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
-                               const std::string& message) {  
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;                         
+                               const std::string& message) {
+  from_.CopyFrom(from);
+  to_.CopyFrom(to);
+  message_ = message;
+
+  Post(this, MSG_XMPPMESSAGE);
+}
+
+void EchoThread::OnXmppMessage()
+{
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   if(xmpp_handler_) {
-    std::string response;
-    xmpp_handler_->DoOnXmppMessage(from, to, message, &response);
-    //SignalXmppMessage(from, to, message, &response);
+    xmpp_handler_->DoOnXmppMessage(from_, to_, message_, &response_);
     if(xmpp_handler_->Response()) {
-      if (client()->jid() == to) {
-        send_task_->Send(from, response);
+      if (client()->jid() == to_) {
+        send_task_->Send(from_, response_);
       }
     }
   }
@@ -158,6 +160,7 @@ void EchoThread::OnXmppOpen() {
 #ifdef RECEIVE
   receive_task_ = new echo::ReceiveTask(client());
   receive_task_->SignalReceived.connect(this, &EchoThread::OnXmppMessage);
+  signal_receive_task_ = true;
   receive_task_->Start();
 #endif // RECEIVE
   // ping
@@ -168,58 +171,43 @@ void EchoThread::OnXmppOpen() {
                                   16000,
                                   5000);
   ping_task_->SignalTimeout.connect(this, &EchoThread::OnPingTimeout);
+  signal_ping_task_ = true;
   ping_task_->Start();
 #endif // RECEIVE
-  if(xmpp_handler_) {
-    //xmpp_handler_->OnXmppOpen();
+  if (xmpp_handler_) {
+    //xmpp_handler_->DoOnXmppOpen();
     SignalXmppOpen();
-  }
-}
-
-void EchoThread::OnXmppSocketClose(int state) {
-  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  //Extra clean up for a socket close that wasn't originated by a logout.
-  buzz::XmppEngine::State current = xmpp_pump_->client()->GetState();
-  if (!socket_closed_ && current != buzz::XmppEngine::STATE_CLOSED) {
-    Post(this, MSG_DISCONNECT);
   }
 }
 
 void EchoThread::OnXmppClosed() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  socket_closed_ = true;
-  //receive_task_->SignalReceived.disconnect(this);
-  //ping_task_->SignalTimeout.disconnect(this);
-  //socket_->SignalCloseEvent.disconnect(this);
   if(xmpp_handler_) {
-    //xmpp_handler_->OnXmppClosed(client()->GetError(NULL));
-    SignalXmppClosed(client()->GetError(NULL));
+    SignalXmppClosed(error_);
+    //xmpp_handler_->DoOnXmppClosed(client()->GetError(NULL));
   }
 }
 
 void EchoThread::OnPingTimeout() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  Post(this, MSG_DISCONNECT);
+  //Post(this, MSG_DISCONNECT);
 }
 
 void EchoThread::OnStateChange(buzz::XmppEngine::State state) { 
   switch(state) {
     case buzz::XmppEngine::STATE_START: {
-      LOG(LS_SENSITIVE) << "STATE_START";      
       break;
     }
     case buzz::XmppEngine::STATE_OPENING: {
-      LOG(LS_SENSITIVE) << "STATE_OPENING";
       break;
     }
     case buzz::XmppEngine::STATE_OPEN: {
-      LOG(LS_SENSITIVE) << "STATE_OPEN";
-      OnXmppOpen();
+      Post(this, MSG_XMPPOPEN);
       break;
     }
     case buzz::XmppEngine::STATE_CLOSED: {
-      LOG(LS_SENSITIVE) << "STATE_CLOSED";
-      OnXmppClosed();
+      error_ = client()->GetError(NULL);
+      Post(this, MSG_XMPPCLOSED);
       break;
     }
     default: {

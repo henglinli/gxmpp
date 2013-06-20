@@ -27,13 +27,13 @@
 #ifndef _ECHO_XMPPTHREAD_H_
 #define _ECHO_XMPPTHREAD_H_
 
-#include "talk/base/thread.h"
-#include "talk/xmpp/xmppclientsettings.h"
-#include "talk/xmpp/xmppengine.h"
-#include "talk/xmpp/xmpppump.h"
-#include "talk/xmpp/xmppsocket.h"
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
+#ifndef SELF_XMPP_PUMP
+#include "talk/xmpp/xmpppump.h"
+#else
+#include "xmpppump.h"
+#endif
 #include "sendtask.h"
 #include "receivetask.h"
 
@@ -63,8 +63,12 @@ namespace echo {
   
   class EchoThread
      : public talk_base::Thread
-     , public talk_base::MessageHandler 
+     , public talk_base::MessageHandler
+     #ifndef SELF_XMPP_PUMP
      , public buzz::XmppPumpNotify
+     #else 
+     , public XmppPumpNotify
+     #endif
      , public sigslot::has_slots<>
   {
  public:
@@ -82,33 +86,34 @@ namespace echo {
     inline buzz::XmppClient* client() { return xmpp_pump_->client(); }
 
     void ProcessMessages(int cms);
-    
+    void RegisterXmppHandler(XmppHandler *xmpp_handler);
     void Login(const buzz::XmppClientSettings & xcs);
     buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
     void Disconnect();
-    
-    void RegisterXmppHandler(XmppHandler *xmpp_handler);
  private:
-    void RemoveXmppHandler();
     virtual void OnStateChange(buzz::XmppEngine::State state);
     virtual void OnXmppMessage(const buzz::Jid& from,
                                const buzz::Jid& to,
                                const std::string& message);
+    virtual void OnXmppMessage();
     virtual void OnXmppOpen();
-    virtual void OnXmppSocketClose(int state);
     virtual void OnXmppClosed();
-    virtual void OnMessage(talk_base::Message* pmsg);
     virtual void OnPingTimeout();
+    virtual void OnMessage(talk_base::Message* pmsg);
  private:
-    talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
+  #ifndef SELF_XMPP_PUMP
+  talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
+  #else
+    talk_base::scoped_ptr<XmppPump> xmpp_pump_;
+    #endif
     buzz::PingTask *ping_task_;
+    bool signal_ping_task_;
     buzz::PresenceOutTask *presence_out_task_;
     echo::SendTask *send_task_;
     echo::ReceiveTask *receive_task_;
+    bool signal_receive_task_;
     talk_base::MessageQueue message_queue_;
     XmppHandler *xmpp_handler_;
-    buzz::XmppSocket *socket_;
-    bool socket_closed_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };
 }

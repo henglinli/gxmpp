@@ -29,15 +29,11 @@
 #ifndef _ECHO_XMPPPUMP_H_
 #define _ECHO_XMPPPUMP_H_
 
-#include "talk/base/criticalsection.h"
-#include "talk/base/messagequeue.h"
 #include "talk/base/taskrunner.h"
 #include "talk/base/thread.h"
 #include "talk/xmpp/xmppsocket.h"
 #include "talk/xmpp/xmppauth.h"
 #include "talk/xmpp/xmppclient.h"
-#include "talk/xmpp/xmppengine.h"
-#include "talk/xmpp/xmpptask.h"
 
 namespace echo {
 
@@ -48,8 +44,6 @@ public:
   XmppPumpNotify() {}
   virtual ~XmppPumpNotify() {}
   virtual void OnStateChange(buzz::XmppEngine::State state) = 0;
-  virtual void OnXmppError(buzz::XmppEngine::Error error) = 0;
-  virtual void OnXmppSocketClose(int state) = 0;
 };
 
 class XmppPump : public talk_base::MessageHandler, public talk_base::TaskRunner {
@@ -66,6 +60,7 @@ public:
   void OnStateChange(buzz::XmppEngine::State state);
 
   void OnXmppSocketClose(int state);
+  
   void WakeTasks();
 
   int64 CurrentTime();
