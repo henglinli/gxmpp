@@ -1,7 +1,11 @@
+#include <vector>
+#include <map>
+#include "talk/xmpp/rostermoduleimpl.h"
 #include "talk/xmpp/xmppauth.h"
 #include "talk/xmpp/xmppsocket.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/pingtask.h"
+#include "rosterhandler.h"
 #include "receivetask.h"
 #include "echothread.h"
 
@@ -19,17 +23,54 @@ buzz::XmppEngine::Error error_;
 buzz::Jid from_;
 buzz::Jid to_;
 std::string message_;
-std::string response_;
 } // namespace
 
+class EchoThread::Private
+{
+public:
+  Private(EchoThread *echothread) 
+  : echothread_(echothread)
+  , roster_module_(NULL)
+  , roster_handelr_(NULL) {
+    roster_handelr_ = new RosterHandler;
+  };
+  virtual ~Private(){
+    delete roster_handelr_;
+    roster_handelr_ = NULL;
+  };
+  bool Init(buzz::XmppEngine *engine) {
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+    if (NULL != echothread_) {
+      buzz::XmppClient *client = echothread_->xmpp_pump_->client();
+      roster_module_ = buzz::XmppRosterModuleImpl::Create();
+      roster_module_->RegisterEngine(client->engine());
+      roster_module_->BroadcastPresence();
+      roster_module_->RequestRosterUpdate();
+      return true;
+    } else {
+      if (engine){
+        roster_module_ = buzz::XmppRosterModuleImpl::Create();
+        roster_module_->RegisterEngine(engine);
+        roster_module_->BroadcastPresence();
+        roster_module_->RequestRosterUpdate();
+        return true;
+      }
+     return false;
+    }
+  }
+private:
+  // the owner
+  EchoThread const *echothread_;
+  buzz::XmppRosterModule *roster_module_;
+  buzz::XmppRosterHandler *roster_handelr_;
+};
 // EchoThread::
 EchoThread::EchoThread()
     : ping_task_(NULL)
-    , signal_ping_task_(false)
     , presence_out_task_(NULL)
+    , presence_receive_task_(NULL)
     , send_task_(NULL)
     , receive_task_(NULL)
-    , signal_receive_task_(false)
     , message_queue_()
     , xmpp_handler_(NULL) {
   //nil
@@ -126,11 +167,12 @@ void EchoThread::OnXmppMessage(const buzz::Jid& from,
 void EchoThread::OnXmppMessage()
 {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  static std::string response;
   if(xmpp_handler_) {
-    xmpp_handler_->DoOnXmppMessage(from_, to_, message_, &response_);
+    xmpp_handler_->DoOnXmppMessage(from_, to_, message_, &response);
     if(xmpp_handler_->Response()) {
-      if (client()->jid() == to_) {
-        send_task_->Send(from_, response_);
+      if (client()->jid() != from_) {
+        send_task_->Send(from_, response);
       }
     }
   }
@@ -139,7 +181,12 @@ void EchoThread::OnXmppMessage()
 void EchoThread::OnXmppOpen() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // presence out
-#define PRESENCEOUT
+#define ROSTER
+#ifdef ROSTER
+  private_.reset(new Private(NULL));
+  private_->Init(client()->engine());
+#endif
+//#define PRESENCEOUT
 #ifdef PRESENCEOUT
   presence_out_task_ = new buzz::PresenceOutTask(client());
   presence_out_task_->Start();      
@@ -149,6 +196,10 @@ void EchoThread::OnXmppOpen() {
   presence_status.set_show(buzz::PresenceStatus::SHOW_ONLINE);
   presence_out_task_->Send(presence_status);
 #endif //PRESENCEOUT
+#define PRESENCERECV
+#ifdef PRESENCERECV
+  presence_receive_task_ = new buzz::PresenceReceiveTask(client());
+#endif
   // send
 #define SEND
 #ifdef SEND
@@ -160,7 +211,6 @@ void EchoThread::OnXmppOpen() {
 #ifdef RECEIVE
   receive_task_ = new echo::ReceiveTask(client());
   receive_task_->SignalReceived.connect(this, &EchoThread::OnXmppMessage);
-  signal_receive_task_ = true;
   receive_task_->Start();
 #endif // RECEIVE
   // ping
@@ -171,7 +221,6 @@ void EchoThread::OnXmppOpen() {
                                   16000,
                                   5000);
   ping_task_->SignalTimeout.connect(this, &EchoThread::OnPingTimeout);
-  signal_ping_task_ = true;
   ping_task_->Start();
 #endif // RECEIVE
   if (xmpp_handler_) {

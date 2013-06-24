@@ -12,7 +12,7 @@ ReceiveTask::~ReceiveTask() {
 }
 // Return true if the stanza should be received.
 bool ReceiveTask::WantsStanza(const buzz::XmlElement* stanza) {
-  //LOG(LS_SENSITIVE) << "handleRecieve";
+  //LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   //LOG(LS_SENSITIVE) << stanza->Str();
   // Make sure that this stanza is a message
   if (stanza->Name() != buzz::QN_MESSAGE) {

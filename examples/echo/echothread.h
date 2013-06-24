@@ -29,6 +29,7 @@
 
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
+#include "talk/xmpp/presencereceivetask.h"
 #ifndef SELF_XMPP_PUMP
 #include "talk/xmpp/xmpppump.h"
 #else
@@ -101,17 +102,19 @@ namespace echo {
     virtual void OnPingTimeout();
     virtual void OnMessage(talk_base::Message* pmsg);
  private:
+  class Private;
+  friend class Private;
+  talk_base::scoped_ptr<Private> private_;
   #ifndef SELF_XMPP_PUMP
   talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
   #else
     talk_base::scoped_ptr<XmppPump> xmpp_pump_;
     #endif
     buzz::PingTask *ping_task_;
-    bool signal_ping_task_;
     buzz::PresenceOutTask *presence_out_task_;
+    buzz::PresenceReceiveTask *presence_receive_task_;
     echo::SendTask *send_task_;
     echo::ReceiveTask *receive_task_;
-    bool signal_receive_task_;
     talk_base::MessageQueue message_queue_;
     XmppHandler *xmpp_handler_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);

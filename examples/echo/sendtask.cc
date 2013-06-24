@@ -24,7 +24,6 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #include "talk/xmpp/constants.h"
 #include "talk/xmpp/xmppengine.h"
 #include "sendtask.h"

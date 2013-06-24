@@ -42,6 +42,7 @@ class Client : public echo::XmppHandler
       xcs_.set_server(talk_base::SocketAddress(jid_.domain(), kDefaultXmppPort));
     }
     talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
+    SetResponse(true);
     thread_.reset(new echo::EchoThread);
     thread_->RegisterXmppHandler(this);
     thread_->Start();
