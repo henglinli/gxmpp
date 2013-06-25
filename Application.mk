@@ -1,3 +1,4 @@
+APP_PLATFORM := android-14
 NDK_TOOLCHAIN_VERSION=4.7
 #NDK_TOOLCHAIN_VERSION=clang3.2
 # Build ARMv7-A machine code.

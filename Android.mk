@@ -15,7 +15,7 @@ expat_CFLAGS := \
 	-DHAVE_MEMMOVE
 
 expat_C_INCLUDES += \
-	$(LOCAL_PATH)/third_party/expat/lib
+	third_party/expat/lib
 
 # gxmpp
 # =====================================================
@@ -32,9 +32,7 @@ gxmpp_CXXFLAGS := \
 	-DLINUX \
 	-DEXPAT_RELATIVE_PATH
 
-gxmpp_C_INCLUDES += \
-	$(LOCAL_PATH) \
-	$(LOCAL_PATH)/third_party/expat/lib
+gxmpp_C_INCLUDES += third_party/expat/lib
 
 # build
 # =====================================================
@@ -78,8 +76,8 @@ LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS)
 
 LOCAL_LDLIBS := -llog
 
-LOCAL_SRC_FILES := $(wildcard examples/echo/*.cc) client.cc
+LOCAL_SRC_FILES := $(wildcard examples/echo/*.cc) client.cc 
 
-LOCAL_STATIC_LIBRARIES := gxmpp_static expat_static  
+LOCAL_STATIC_LIBRARIES := gxmpp_static expat_static
 
 include $(BUILD_SHARED_LIBRARY)
