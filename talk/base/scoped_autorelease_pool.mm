@@ -36,7 +36,7 @@ ScopedAutoreleasePool::ScopedAutoreleasePool() {
 }
 
 ScopedAutoreleasePool::~ScopedAutoreleasePool() {
-  [pool_ drain];
+    //[pool_ drain];
 }
 
 }  // namespace talk_base

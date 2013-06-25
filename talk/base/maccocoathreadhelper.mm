@@ -48,8 +48,8 @@ void InitCocoaMultiThreading() {
 
     // Doing NSAutoreleasePool* hack = [[NSAutoreleasePool alloc] init];
     // causes unused variable error.
-    NSAutoreleasePool* hack;
-    hack = [[NSAutoreleasePool alloc] init];
+    //NSAutoreleasePool* hack;
+    //hack = [[NSAutoreleasePool alloc] init];
     [NSThread detachNewThreadSelector:@selector(class)
                              toTarget:[NSObject class]
                            withObject:nil];

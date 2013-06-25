@@ -26,7 +26,7 @@ ifeq ($(UNAME_S),Linux)
 	LIBS += -lrt
 endif
 ifeq ($(UNAME_S),Darwin)
-        FLAGS += -D OSX
+        FLAGS += -D OSX -fobjc-arc
 	LDFLAGS +=
 	LIBS +=  -lobjc -framework CoreFoundation -framework Cocoa
 	OSX_SRC += $(wildcard talk/base/*.mm)
