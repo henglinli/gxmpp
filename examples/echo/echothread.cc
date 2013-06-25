@@ -27,16 +27,16 @@ std::string message_;
 
 class EchoThread::Private
 {
-public:
+ public:
   Private(EchoThread *echothread) 
-  : echothread_(echothread)
-  , roster_module_(NULL)
-  , roster_handelr_(NULL) {
-    roster_handelr_ = new RosterHandler;
+      : echothread_(echothread)
+      , roster_module_(NULL)
+      , roster_handler_(NULL) {
+    roster_handler_ = new RosterHandler;
   };
   virtual ~Private(){
-    delete roster_handelr_;
-    roster_handelr_ = NULL;
+    delete roster_handler_;
+    roster_handler_= NULL;
   };
   bool Init(buzz::XmppEngine *engine) {
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
@@ -44,6 +44,7 @@ public:
       buzz::XmppClient *client = echothread_->xmpp_pump_->client();
       roster_module_ = buzz::XmppRosterModuleImpl::Create();
       roster_module_->RegisterEngine(client->engine());
+      roster_module_->set_roster_handler(roster_handler_);
       roster_module_->BroadcastPresence();
       roster_module_->RequestRosterUpdate();
       return true;
@@ -51,18 +52,19 @@ public:
       if (engine){
         roster_module_ = buzz::XmppRosterModuleImpl::Create();
         roster_module_->RegisterEngine(engine);
+        roster_module_->set_roster_handler(roster_handler_);
         roster_module_->BroadcastPresence();
         roster_module_->RequestRosterUpdate();
         return true;
       }
-     return false;
+      return false;
     }
   }
-private:
+ private:
   // the owner
   EchoThread const *echothread_;
   buzz::XmppRosterModule *roster_module_;
-  buzz::XmppRosterHandler *roster_handelr_;
+  buzz::XmppRosterHandler *roster_handler_;
 };
 // EchoThread::
 EchoThread::EchoThread()
@@ -101,14 +103,14 @@ void EchoThread::OnMessage(talk_base::Message* pmsg) {
     case MSG_LOGIN : {
       LOG(LS_SENSITIVE) << "MSG_LOGIN";
      
-      #ifndef SELF_XMPP_PUMP
-       xmpp_pump_.reset(new buzz::XmppPump(this));
+#ifndef SELF_XMPP_PUMP
+      xmpp_pump_.reset(new buzz::XmppPump(this));
 
       xmpp_pump_->DoLogin(xcs_, new buzz::XmppSocket(xcs_.use_tls()), new XmppAuth);
-      #else
-       xmpp_pump_.reset(new XmppPump(this));
+#else
+      xmpp_pump_.reset(new XmppPump(this));
       xmpp_pump_->DoLogin(xcs_);
-      #endif
+#endif
       break;
     }
     case MSG_DISCONNECT : {
@@ -186,7 +188,7 @@ void EchoThread::OnXmppOpen() {
   private_.reset(new Private(NULL));
   private_->Init(client()->engine());
 #endif
-//#define PRESENCEOUT
+  //#define PRESENCEOUT
 #ifdef PRESENCEOUT
   presence_out_task_ = new buzz::PresenceOutTask(client());
   presence_out_task_->Start();      
@@ -214,15 +216,15 @@ void EchoThread::OnXmppOpen() {
   receive_task_->Start();
 #endif // RECEIVE
   // ping
-#define RECEIVE
-#ifdef RECEIVE
+#define PING
+#ifdef PING
   ping_task_ = new buzz::PingTask(client(), 
                                   talk_base::Thread::Current(),
                                   16000,
                                   5000);
   ping_task_->SignalTimeout.connect(this, &EchoThread::OnPingTimeout);
   ping_task_->Start();
-#endif // RECEIVE
+#endif // PING
   if (xmpp_handler_) {
     //xmpp_handler_->DoOnXmppOpen();
     SignalXmppOpen();
@@ -239,7 +241,7 @@ void EchoThread::OnXmppClosed() {
 
 void EchoThread::OnPingTimeout() {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
-  //Post(this, MSG_DISCONNECT);
+  Post(this, MSG_DISCONNECT);
 }
 
 void EchoThread::OnStateChange(buzz::XmppEngine::State state) { 
