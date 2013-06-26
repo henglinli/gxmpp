@@ -749,14 +749,11 @@
 				);
 				HEADER_SEARCH_PATHS = "";
 				OTHER_CFLAGS = (
-					"-D",
-					POSIX,
-					"-D",
-					OSX,
-					"-D",
-					EXPAT_RELATIVE_PATH,
-					"-I",
-					./,
+					"-DPOSIX",
+					"-DOSX",
+					"-DEXPAT_RELATIVE_PATH",
+					"-DLOGGING",
+					"-I./",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
@@ -771,14 +768,11 @@
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				HEADER_SEARCH_PATHS = "";
 				OTHER_CFLAGS = (
-					"-D",
-					POSIX,
-					"-D",
-					OSX,
-					"-D",
-					EXPAT_RELATIVE_PATH,
-					"-I",
-					./,
+					"-DPOSIX",
+					"-DOSX",
+					"-DEXPAT_RELATIVE_PATH",
+					"-DLOGGING",
+					"-I./",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				USER_HEADER_SEARCH_PATHS = "";
