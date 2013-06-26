@@ -22,7 +22,7 @@ LIBS +=
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	FLAGS += -D LINUX
-	LDFLAGS += -pthread
+	LDFLAGS += -pthread -ltcmalloc
 	LIBS += -lrt
 endif
 ifeq ($(UNAME_S),Darwin)

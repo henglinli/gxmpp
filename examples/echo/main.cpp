@@ -5,13 +5,18 @@
 #include "talk/xmpp/xmppclientsettings.h"
 #include "echothread.h"
 
+#define HEAPCHECK
+#ifdef HEAPCHECK
+#include "gperftools/heap-checker.h"
+#endif
+
 const int kDefaultXmppPort = 5222;
 
 class Client : public echo::XmppHandler
 {
  public:
   Client()
-      : try_(0)
+      : try_(10)
   {
     // nil
   };
@@ -95,28 +100,36 @@ class Client : public echo::XmppHandler
 };
 
 int main(int argc, char* argv[]) {
-  if (argc != 3) {
-    std::cout << argv[0] << " jid password" << std::endl;
-    return -1;
-  }
-
-  buzz::Jid jid(argv[1]);
-  if(!jid.IsValid()) {
-    std::cout << argv[1] << " bad jid" << std::endl;
-    return -1;
-  }
-  Client client;
-
-  client.Init(argv[1], argv[2], "113.142.30.52");
-  client.Login();
-  
-  // Use main thread for console input
-  std::string line;
-  while (std::getline(std::cin, line)) {
-    if ("quit" == line || "q" == line) {
-      break;
+#ifdef HEAPCHECK
+  HeapLeakChecker heap_checker("check_gxmpp");
+#endif
+  {
+    if (argc != 3) {
+      std::cout << argv[0] << " jid password" << std::endl;
+      return -1;
     }
+
+    buzz::Jid jid(argv[1]);
+    if(!jid.IsValid()) {
+      std::cout << argv[1] << " bad jid" << std::endl;
+      return -1;
+    }
+    Client client;
+
+    client.Init(argv[1], argv[2], "113.142.30.52");
+    client.Login();
+  
+    // Use main thread for console input
+    std::string line;
+    while (std::getline(std::cin, line)) {
+      if ("quit" == line || "q" == line) {
+        break;
+      }
+    }
+    client.Logout();
   }
-  client.Logout();
+#ifdef HEAPCHECK
+  heap_checker.NoLeaks();
+#endif
   return 0;
 }

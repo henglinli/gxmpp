@@ -26,7 +26,6 @@
  */
 #ifndef _ECHO_XMPPTHREAD_H_
 #define _ECHO_XMPPTHREAD_H_
-
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
 #include "talk/xmpp/presencereceivetask.h"
@@ -97,14 +96,20 @@ namespace echo {
                                const buzz::Jid& to,
                                const std::string& message);
     virtual void OnXmppMessage();
+    virtual void OnXmppStart();
+    virtual void OnXmppOpening();
     virtual void OnXmppOpen();
     virtual void OnXmppClosed();
     virtual void OnPingTimeout();
     virtual void OnMessage(talk_base::Message* pmsg);
  private:
-  class Private;
-  friend class Private;
-  talk_base::scoped_ptr<Private> private_;
+    class Module;
+    friend class Module;
+    //talk_base::scoped_ptr<Module> module_;
+    Module *module_;
+    class Task;
+    friend class Task;
+    talk_base::scoped_ptr<Task> task_;
   #ifndef SELF_XMPP_PUMP
   talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
   #else
@@ -115,7 +120,6 @@ namespace echo {
     buzz::PresenceReceiveTask *presence_receive_task_;
     echo::SendTask *send_task_;
     echo::ReceiveTask *receive_task_;
-    talk_base::MessageQueue message_queue_;
     XmppHandler *xmpp_handler_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };

@@ -580,14 +580,14 @@ XmppRosterContactImpl::CreateRawXmlSkeleton() {
 // XmppRosterModuleImpl --------------------------------------------------------
 XmppRosterModule *
 XmppRosterModule::Create() {
-  return new XmppRosterModuleImpl();
+  return new XmppRosterModuleImpl;
 }
 
 XmppRosterModuleImpl::XmppRosterModuleImpl() :
   roster_handler_(NULL),
-  incoming_presence_map_(new JidPresenceVectorMap()),
-  incoming_presence_vector_(new PresenceVector()),
-  contacts_(new ContactVector()) {
+  incoming_presence_map_(new JidPresenceVectorMap),
+  incoming_presence_vector_(new PresenceVector),
+  contacts_(new ContactVector) {
 
 }
 

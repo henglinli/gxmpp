@@ -3,6 +3,8 @@ client.cc
 genh
 client.cc  
 *~
+*.bak
+*.test
 # Compiled source #
 ###################
 *.com

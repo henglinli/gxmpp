@@ -57,7 +57,7 @@ buzz::XmppReturnStatus SendTask::Send(const buzz::Jid& to,
 
   // Now queue it up.
   QueueStanza(message_stanza);
-
+  delete message_stanza;
   return buzz::XMPP_RETURN_OK;
 }
 

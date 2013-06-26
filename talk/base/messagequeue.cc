@@ -110,7 +110,7 @@ MessageQueue::MessageQueue(SocketServer* ss)
     // server, and provide it to the MessageQueue, since the Thread controls
     // the I/O model, and MQ is agnostic to those details.  Anyway, this causes
     // messagequeue_unittest to depend on network libraries... yuck.
-    default_ss_.reset(new PhysicalSocketServer());
+    default_ss_.reset(new PhysicalSocketServer);
     ss_ = default_ss_.get();
   }
   ss_->SetMessageQueue(this);
