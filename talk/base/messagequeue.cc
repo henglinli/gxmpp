@@ -222,7 +222,7 @@ bool MessageQueue::Get(Message *pmsg, int cmsWait, bool process_io) {
       // If this was a dispose message, delete it and skip it.
       if (MQID_DISPOSE == pmsg->message_id) {
         ASSERT(NULL == pmsg->phandler);
-        delete pmsg->pdata;
+          //delete pmsg->pdata;
         *pmsg = Message();
         continue;
       }

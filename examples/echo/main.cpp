@@ -5,7 +5,7 @@
 #include "talk/xmpp/xmppclientsettings.h"
 #include "echothread.h"
 
-#define HEAPCHECK
+//#define HEAPCHECK
 #ifdef HEAPCHECK
 #include "gperftools/heap-checker.h"
 #endif
