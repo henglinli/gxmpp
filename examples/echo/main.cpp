@@ -16,7 +16,7 @@ class Client : public echo::XmppHandler
 {
  public:
   Client()
-      : try_(10)
+      : try_(0)
   {
     // nil
   };
@@ -24,6 +24,7 @@ class Client : public echo::XmppHandler
   {
     //
   }
+  
   bool Init(const std::string &jid,
             const std::string &password,
             const std::string &server = "")
@@ -53,6 +54,7 @@ class Client : public echo::XmppHandler
     thread_->Start();
     return true;
   }
+
   void Login()
   {
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;

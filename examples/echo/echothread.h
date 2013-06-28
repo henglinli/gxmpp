@@ -29,6 +29,7 @@
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
 #include "talk/xmpp/presencereceivetask.h"
+//#define SELF_XMPP_PUMP
 #ifndef SELF_XMPP_PUMP
 #include "talk/xmpp/xmpppump.h"
 #else
@@ -36,16 +37,17 @@
 #endif
 #include "sendtask.h"
 #include "receivetask.h"
+#include "rosterhandler.h"
 
 namespace echo {
   class XmppHandler : public sigslot::has_slots<> {
  public:
-    XmppHandler():response_(true) {};
+ XmppHandler():response_(true) {};
     ~XmppHandler() {};   
     virtual void DoOnXmppMessage(const buzz::Jid& from,
-                               const buzz::Jid& to,
-                               const std::string& message,
-                               std::string* response) = 0;
+                                 const buzz::Jid& to,
+                                 const std::string& message,
+                                 std::string* response) = 0;
     virtual void DoOnXmppOpen() = 0;
     virtual void DoOnXmppClosed(int error) = 0;
     
@@ -62,14 +64,14 @@ namespace echo {
   };
   
   class EchoThread
-     : public talk_base::Thread
-     , public talk_base::MessageHandler
-     #ifndef SELF_XMPP_PUMP
-     , public buzz::XmppPumpNotify
-     #else 
-     , public XmppPumpNotify
-     #endif
-     , public sigslot::has_slots<>
+      : public talk_base::Thread
+      , public talk_base::MessageHandler
+#ifndef SELF_XMPP_PUMP
+      , public buzz::XmppPumpNotify
+#else 
+      , public XmppPumpNotify
+#endif
+      , public sigslot::has_slots<>
   {
  public:
     // Slot for chat message callbacks
@@ -105,16 +107,16 @@ namespace echo {
  private:
     class Module;
     friend class Module;
-    //talk_base::scoped_ptr<Module> module_;
-    Module *module_;
+    talk_base::scoped_ptr<Module> module_;
     class Task;
     friend class Task;
     talk_base::scoped_ptr<Task> task_;
-  #ifndef SELF_XMPP_PUMP
-  talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
-  #else
+    //talk_base::scoped_ptr<buzz::XmppRosterModule> roster_module_;
+#ifndef SELF_XMPP_PUMP
+    talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
+#else
     talk_base::scoped_ptr<XmppPump> xmpp_pump_;
-    #endif
+#endif
     buzz::PingTask *ping_task_;
     buzz::PresenceOutTask *presence_out_task_;
     buzz::PresenceReceiveTask *presence_receive_task_;

@@ -31,8 +31,6 @@
 
 #include "talk/base/taskrunner.h"
 #include "talk/base/thread.h"
-#include "talk/xmpp/xmppsocket.h"
-#include "talk/xmpp/xmppauth.h"
 #include "talk/xmpp/xmppclient.h"
 
 namespace echo {
@@ -51,15 +49,15 @@ public:
   XmppPump(XmppPumpNotify *notify = NULL);
   virtual ~XmppPump();
   
-  buzz::XmppClient *client() { return client_; }
+  buzz::XmppClient *client();
 
-  void DoLogin(const buzz::XmppClientSettings & xcs);
-
+  void DoLogin(const buzz::XmppClientSettings & xcs,
+               buzz::AsyncSocket* socket,
+               buzz::PreXmppAuth* auth);
+  
   void DoDisconnect();
 
   void OnStateChange(buzz::XmppEngine::State state);
-
-  void OnXmppSocketClose(int state);
   
   void WakeTasks();
 
@@ -70,13 +68,18 @@ public:
   buzz::XmppReturnStatus SendStanza(const buzz::XmlElement *stanza);
 
 private:
+  bool first_;
   buzz::XmppEngine::State state_;
   XmppPumpNotify *notify_;
+#ifdef REUSE
+  talk_base::scoped_ptr<buzz::XmppClient> client_;
+  talk_base::scoped_ptr<buzz::AsyncSocket> socket_;
+  talk_base::scoped_ptr<buzz::PreXmppAuth> auth_;
+#else
   buzz::XmppClient *client_;
-  talk_base::CriticalSection disconnect_cs_;
-  buzz::XmppSocket *socket_;
-  XmppAuth *auth_;
-  bool disconnecting_;
+  buzz::AsyncSocket *socket_;
+  buzz::PreXmppAuth *auth_;
+#endif
 };
 
 }  // namespace buzz

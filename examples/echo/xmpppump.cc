@@ -24,68 +24,80 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+#include "talk/base/logging.h"
 #include "talk/xmpp/xmppauth.h"
 #include "talk/xmpp/xmppsocket.h"
 #include "xmpppump.h"
 namespace echo {
 
-XmppPump::XmppPump(XmppPumpNotify * notify) {
-  state_ = buzz::XmppEngine::STATE_NONE;       
-  notify_ = notify;
-  client_ = NULL;
-  socket_ = NULL;
-  auth_ = NULL;
-  disconnecting_ = false; 
+XmppPump::XmppPump(XmppPumpNotify * notify)
+    : first_(true)
+    , state_(buzz::XmppEngine::STATE_NONE)      
+    , notify_(notify)
+    , client_(NULL)
+    , socket_(NULL)
+    , auth_(NULL) {
+  // nil
 }
-
 XmppPump::~XmppPump () {
   // nil
 }
-
-void XmppPump::DoLogin(const buzz::XmppClientSettings & xcs) {
+buzz::XmppClient *XmppPump::client() {
+#ifdef REUSE
+  return client_.get();
+#else
+  return client_;
+#endif
+}
+void XmppPump::DoLogin(const buzz::XmppClientSettings & xcs,
+                       buzz::AsyncSocket* socket,
+                       buzz::PreXmppAuth* auth) {
+#ifdef REUSE
+  //socket_.reset(new buzz::XmppSocket(xcs.use_tls()));
+  //auth_.reset(new XmppAuth);
+  client_.reset(new buzz::XmppClient(this));
+#else
+#if 0
   if (socket_ == NULL) {
+    LOG(LS_SENSITIVE) << "new XmppSocket";
     socket_ = new buzz::XmppSocket(xcs.use_tls());  // NOTE: deleted by TaskRunner
   }
   if (auth_ == NULL) {
-    auth_ = new XmppAuth();  // NOTE: deleted by TaskRunner
+    LOG(LS_SENSITIVE) << "new XmppAuth";
+    auth_ = new XmppAuth;  // NOTE: deleted by TaskRunner
   }
+#endif
   if (client_ == NULL) {
+    LOG(LS_SENSITIVE) << "new XmppClient";
     client_ = new buzz::XmppClient(this);  // NOTE: deleted by TaskRunner
   }
-
-  if (client_ && !AllChildrenDone()) {
+#endif
+  if (!AllChildrenDone()) {
     OnStateChange(buzz::XmppEngine::STATE_START);
     client_->SignalStateChange.connect(this, &XmppPump::OnStateChange);
-    socket_->SignalCloseEvent.connect(this, &XmppPump::OnXmppSocketClose);
-    client_->Connect(xcs, "", socket_, auth_);
+    client_->Connect(xcs, "en", socket, auth);
     client_->Start();
-  }
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__ << " AllChildrenDone: " << (AllChildrenDone()?"YES":"NO");
+  }                 
 }
 
 void XmppPump::DoDisconnect() {
-  talk_base::CritScope lock(&disconnect_cs_);
-  if (!disconnecting_  && !AllChildrenDone()) {
-    disconnecting_ = true;
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__ << " AllChildrenDone: " << (AllChildrenDone()?"YES":"NO");
+  if (!AllChildrenDone()) {
     client_->Disconnect();
-    client_ = NULL;
   }
-  OnStateChange(buzz::XmppEngine::STATE_CLOSED);
+  //OnStateChange(buzz::XmppEngine::STATE_CLOSED);
+  client_->SignalStateChange.disconnect(this);
 }
 
 void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__ << " state: " << state;
   if (state_ == state) {
     return;
   }
   state_ = state;
   if (notify_ != NULL) {
     notify_->OnStateChange(state);
-  }
-}
-
-void XmppPump::OnXmppSocketClose(int state) {
-  //Extra clean up for a socket close that wasn't originated by a logout.
-  if (!disconnecting_ && state_ != buzz::XmppEngine::STATE_CLOSED) {
-    DoDisconnect();
   }
 }
 
@@ -98,6 +110,7 @@ int64 XmppPump::CurrentTime() {
 }
 
 void XmppPump::OnMessage(talk_base::Message *pmsg) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   RunTasks();
 }
 
