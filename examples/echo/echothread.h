@@ -90,7 +90,7 @@ namespace echo {
     void ProcessMessages(int cms);
     void RegisterXmppHandler(XmppHandler *xmpp_handler);
     void Login(const buzz::XmppClientSettings & xcs);
-    buzz::XmppReturnStatus Send(const buzz::Jid& to, const std::string& message);
+    buzz::XmppReturnStatus SendXmppMessage(const buzz::Jid& to, const std::string& message);
     void Disconnect();
  private:
     virtual void OnStateChange(buzz::XmppEngine::State state);
@@ -111,7 +111,6 @@ namespace echo {
     class Task;
     friend class Task;
     talk_base::scoped_ptr<Task> task_;
-    //talk_base::scoped_ptr<buzz::XmppRosterModule> roster_module_;
 #ifndef SELF_XMPP_PUMP
     talk_base::scoped_ptr<buzz::XmppPump> xmpp_pump_;
 #else

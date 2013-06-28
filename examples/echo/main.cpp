@@ -3,6 +3,7 @@
 #include "talk/base/cryptstring.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/xmppclientsettings.h"
+#include "gxmpp/xmppthread.h"
 #include "echothread.h"
 
 //#define HEAPCHECK
@@ -116,11 +117,18 @@ int main(int argc, char* argv[]) {
       std::cout << argv[1] << " bad jid" << std::endl;
       return -1;
     }
+#define XMPPTHREAD
+#ifndef XMPPTHREAD
     Client client;
-
+    
     client.Init(argv[1], argv[2], "113.142.30.52");
     client.Login();
-  
+#else
+    gxmpp::XmppThread thread;
+    thread.Start();
+    thread.Init(argv[1], argv[2], "113.142.30.52");
+    thread.Login();
+#endif
     // Use main thread for console input
     std::string line;
     while (std::getline(std::cin, line)) {
@@ -128,7 +136,12 @@ int main(int argc, char* argv[]) {
         break;
       }
     }
+#ifndef XMPPTHREAD
     client.Logout();
+#else
+    thread.Disconnect();
+    thread.Stop();
+#endif
   }
 #ifdef HEAPCHECK
   heap_checker.NoLeaks();

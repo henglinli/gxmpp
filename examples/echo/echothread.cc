@@ -51,6 +51,10 @@ class EchoThread::Task
  public:
   Task(){}
   virtual ~Task(){}
+ private:
+  //buzz::PingTask *ping_task_;
+  //echo::SendTask *send_task_;
+  //echo::ReceiveTask *receive_task_;
 };
 // EchoThread::
 EchoThread::EchoThread()
@@ -137,7 +141,8 @@ void EchoThread::RegisterXmppHandler(XmppHandler *xmpp_handler) {
   }
 }
 
-buzz::XmppReturnStatus EchoThread::Send(const buzz::Jid& to, const std::string& message) {
+buzz::XmppReturnStatus EchoThread::SendXmppMessage(const buzz::Jid& to,
+                                                   const std::string& message) {
   LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // Make sure we are actually connected.
   if (client()->GetState() != buzz::XmppEngine::STATE_OPEN) {

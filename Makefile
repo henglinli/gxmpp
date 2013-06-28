@@ -13,9 +13,9 @@ OPT ?= -g -O0 -pipe -D LOGGING # (A) Production use (optimized mode)
 CC = clang
 CXX = clang++
 
-FLAGS += -D POSIX -D EXPAT_RELATIVE_PATH 
+FLAGS += -D POSIX -D EXPAT_RELATIVE_PATH -Wall
 CFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -DHAVE_MEMMOVE
-CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC
+CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -std=c++11
 LDFLAGS += 
 LIBS += 
 
@@ -41,7 +41,8 @@ EXPAT_OBJS += $(EXPAT_SRC:.c=.o)
 
 SOURCES += $(wildcard talk/base/*.cc) \
 	$(wildcard talk/xmllite/*.cc) \
-	$(wildcard talk/xmpp/*.cc)
+	$(wildcard talk/xmpp/*.cc) \
+	$(wildcard gxmpp/*.cc)
 
 COMMON_OBJS += $(SOURCES:.cc=.o)
 
