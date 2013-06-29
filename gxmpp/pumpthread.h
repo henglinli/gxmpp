@@ -25,51 +25,61 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _GXMPP_XMPPTHREAD_H_
-#define _GXMPP_XMPPTHREAD_H_
 
+#ifndef __gxmpp__pumpthread__
+#define __gxmpp__pumpthread__
+
+#include <memory>
 #include "talk/base/messagehandler.h"
 #include "talk/base/thread.h"
-#include "xmpppump.h"
+#include "talk/xmpp/xmppclient.h"
+#include "talk/xmpp/xmppauth.h"
+#include "talk/xmpp/xmppsocket.h"
 
 namespace gxmpp {
-class XmppThread
-    : public talk_base::MessageHandler
-    , public talk_base::Thread
-    , public sigslot::has_slots<> {
- public:
-  XmppThread();
-  virtual ~XmppThread();
-  bool Init(const std::string &jid,
-            const std::string &password,
-            const std::string &server = "");
-  void Login();
-  void Disconnect();
+#if 1
+  struct NonCopyable {
+    NonCopyable & operator=(const NonCopyable&) = delete;
+    NonCopyable(const NonCopyable&) = delete;
+    NonCopyable() = default;
+  };
+#endif
+  class PumpThread
+  : NonCopyable
+  , public talk_base::MessageHandler
+  , public talk_base::Thread
+  , public sigslot::has_slots<> {
+  public:
+    PumpThread();
+    virtual ~PumpThread();
+    bool Init(const std::string &jid,
+              const std::string &password,
+              const std::string &server = "");
 
-  inline buzz::XmppClient* client() { return xmpp_pump_->client(); }
+    void Login();
+    void DoLogin();
+    void Disconnect();
+    void DoDisconnect();
+    
+    void OnStateChange(buzz::XmppEngine::State state);
+    void OnMessage(talk_base::Message *pmsg);
+    
+    virtual void DoOnXmppStart();
+    virtual void DoOnXmppOpening();
+    virtual void DoOnXmppOpen();
+    virtual void DoOnXmppClosed();
 
-  void OnStateChange(buzz::XmppEngine::State state);
-  void OnMessage(talk_base::Message *pmsg);
-  virtual void OnXmppMessage(const buzz::Jid& from,
-                             const buzz::Jid& to,
-                             const std::string& message);
-  virtual void OnXmppMessage();
-  virtual void OnXmppStart();
-  virtual void OnXmppOpening();
-  virtual void OnXmppOpen();
-  virtual void OnXmppClosed();
-  virtual void OnPingTimeout();
+    sigslot::signal0<> SignalXmppOpen;
+    sigslot::signal1<buzz::XmppEngine::Error> SignalXmppClosed;
+  private:
+    class PrivateTaskRunner;
+    friend class PrivateTaskRunner;
+    std::shared_ptr<PrivateTaskRunner> task_runner_;
 
-  sigslot::signal1<buzz::XmppEngine::State> SignalXmppState;
-private:
-  std::shared_ptr<XmppPump> xmpp_pump_;
-        //XmppPump xmpp_pump_;
-  class PrivateRosterModule;
-  friend class PrivateRosterModule;
-  std::shared_ptr<PrivateRosterModule> roster_module_;
-        //PrivateRosterModule *roster_module_;
-};
+    class PrivateRosterModule;
+    friend class PrivateRosterModule;
+    std::shared_ptr<PrivateRosterModule> roster_module_;
+  };
+} // gxmpp
 
-}  // namespace gxmpp
-
-#endif // _GXMPP_XMPPTHREAD_H_
+#endif /* defined(__gxmpp__pumpthread__) */

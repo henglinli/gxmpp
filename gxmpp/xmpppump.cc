@@ -32,15 +32,14 @@
 #include "talk/base/taskrunner.h"
 #include "talk/base/messagehandler.h"
 #include "talk/base/thread.h"
-#include "talk/xmpp/xmppauth.h"
-#include "talk/xmpp/xmppsocket.h"
 #include "talk/xmpp/xmppclientsettings.h"
 #include "xmpppump.h"
 
 namespace gxmpp {
 
 class XmppPump::PrivateTaskRunner
-    : public talk_base::TaskRunner
+    : NonCopyable
+    , public talk_base::TaskRunner
     , public talk_base::MessageHandler
 {
  public:
@@ -48,7 +47,9 @@ class XmppPump::PrivateTaskRunner
   virtual ~PrivateTaskRunner() {};
   
   virtual void WakeTasks() final {
-    talk_base::Thread::Current()->Post(this);
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__; 
+    talk_base::Thread::Current()->Post(this, 1128);
+      //RunTasks();
   }
   
   virtual int64 CurrentTime() final {
@@ -56,19 +57,20 @@ class XmppPump::PrivateTaskRunner
   }
   
   virtual void OnMessage(talk_base::Message* msg) final {
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__ << " id: " << msg->message_id;
     RunTasks();
   }
 };
+
+XmppPump::XmppPump()
+  : state_(buzz::XmppEngine::STATE_NONE)
+  , error_(buzz::XmppEngine::ERROR_NONE) {
+      // nil
+    task_runner_.reset(new PrivateTaskRunner);
+  }
   
-XmppPump::XmppPump(XmppPumpNotify * notify)
-    : notify_(notify) 
-    , state_(buzz::XmppEngine::STATE_NONE) {
-  // nil
-  auth_.reset(new XmppAuth);
-  task_runner_.reset(new PrivateTaskRunner);
-}
-    
 XmppPump::~XmppPump () {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // nil
 }
         
@@ -82,6 +84,8 @@ buzz::XmppClient *XmppPump::client() {
 void XmppPump::DoLogin(const buzz::XmppClientSettings & xcs) {
   client_.reset(new buzz::XmppClient(task_runner_.get()));
   socket_.reset(new buzz::XmppSocket(xcs.use_tls()));
+  auth_.reset(new XmppAuth);
+  
   if (!task_runner_->AllChildrenDone()) {
     OnStateChange(buzz::XmppEngine::STATE_START);
     client_->SignalStateChange.connect(this, &XmppPump::OnStateChange);
@@ -94,7 +98,6 @@ void XmppPump::DoDisconnect() {
   if (!task_runner_->AllChildrenDone()) {
     client_->Disconnect();
   }
-  //OnStateChange(buzz::XmppEngine::STATE_CLOSED);
   client_->SignalStateChange.disconnect(this);
 }
 
@@ -104,9 +107,10 @@ void XmppPump::OnStateChange(buzz::XmppEngine::State state) {
     return;
   }
   state_ = state;
-  if (notify_ != NULL) {
-    notify_->OnStateChange(state);
+  if (buzz::XmppEngine::STATE_CLOSED == state_) {
+      //error_ = client()->GetError(NULL);
   }
+  SignalXmppState(state_);
 }
 
 buzz::XmppReturnStatus XmppPump::SendStanza(const buzz::XmlElement *stanza) {

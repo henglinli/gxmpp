@@ -77,6 +77,7 @@
 		9B1DCB061779ECBA00A4E800 /* xmppthread.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B1DC8BD1779EA9600A4E800 /* xmppthread.cc */; };
 		9B6AD81D1779F5BA00769F58 /* libexpat.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B1DCB0E1779EF4A00A4E800 /* libexpat.dylib */; };
 		9B6AD81F1779F8C200769F58 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9B6AD81E1779F8C200769F58 /* Cocoa.framework */; };
+		9BB282AC177ED66600B18133 /* pumpthread.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BB282AA177EC97700B18133 /* pumpthread.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -271,6 +272,12 @@
 		9B1DCA5F1779EBDE00A4E800 /* gxmm_echo */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gxmm_echo; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B1DCB0E1779EF4A00A4E800 /* libexpat.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libexpat.dylib; path = usr/lib/libexpat.dylib; sourceTree = SDKROOT; };
 		9B6AD81E1779F8C200769F58 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		9BB282A4177E105E00B18133 /* xmpppump.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmpppump.cc; sourceTree = "<group>"; };
+		9BB282A5177E105E00B18133 /* xmpppump.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmpppump.h; sourceTree = "<group>"; };
+		9BB282A6177E105E00B18133 /* xmppthread.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xmppthread.cc; sourceTree = "<group>"; };
+		9BB282A7177E105E00B18133 /* xmppthread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xmppthread.h; sourceTree = "<group>"; };
+		9BB282AA177EC97700B18133 /* pumpthread.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = pumpthread.cc; sourceTree = "<group>"; };
+		9BB282AB177EC97700B18133 /* pumpthread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pumpthread.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -289,6 +296,7 @@
 		9B1DC3171779E88C00A4E800 = {
 			isa = PBXGroup;
 			children = (
+				9BB282A3177E105E00B18133 /* gxmpp */,
 				9B6AD81E1779F8C200769F58 /* Cocoa.framework */,
 				9B1DCB0E1779EF4A00A4E800 /* libexpat.dylib */,
 				9B1DCA3C1779EAF400A4E800 /* examples */,
@@ -543,6 +551,19 @@
 			path = hello;
 			sourceTree = "<group>";
 		};
+		9BB282A3177E105E00B18133 /* gxmpp */ = {
+			isa = PBXGroup;
+			children = (
+				9BB282A4177E105E00B18133 /* xmpppump.cc */,
+				9BB282A5177E105E00B18133 /* xmpppump.h */,
+				9BB282A6177E105E00B18133 /* xmppthread.cc */,
+				9BB282A7177E105E00B18133 /* xmppthread.h */,
+				9BB282AA177EC97700B18133 /* pumpthread.cc */,
+				9BB282AB177EC97700B18133 /* pumpthread.h */,
+			);
+			path = gxmpp;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -603,6 +624,7 @@
 				9B1DCACF1779ECBA00A4E800 /* moduleimpl.cc in Sources */,
 				9B1DCAD11779ECBA00A4E800 /* mucroomconfigtask.cc in Sources */,
 				9B1DCAD31779ECBA00A4E800 /* mucroomdiscoverytask.cc in Sources */,
+				9BB282AC177ED66600B18133 /* pumpthread.cc in Sources */,
 				9B1DCAD51779ECBA00A4E800 /* mucroomlookuptask.cc in Sources */,
 				9B1DCAD71779ECBA00A4E800 /* mucroomuniquehangoutidtask.cc in Sources */,
 				9B1DCAD91779ECBA00A4E800 /* pingtask.cc in Sources */,

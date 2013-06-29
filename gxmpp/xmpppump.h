@@ -30,6 +30,8 @@
 
 #include <memory>
 #include "talk/xmpp/xmppclient.h"
+#include "talk/xmpp/xmppauth.h"
+#include "talk/xmpp/xmppsocket.h"
 
 namespace gxmpp {
   
@@ -40,37 +42,30 @@ struct NonCopyable {
 };
 
 // Simple xmpp pump thread
-class XmppPumpNotify : public NonCopyable {
-public:
-  XmppPumpNotify() {}
-  virtual ~XmppPumpNotify() {}
-  virtual void OnStateChange(buzz::XmppEngine::State state) = 0;
-};
-
 class XmppPump
-    : public sigslot::has_slots<>
-    , public NonCopyable
+    : NonCopyable
+    , public sigslot::has_slots<>
 {
 public:
-  explicit XmppPump(XmppPumpNotify *notify = NULL);
+  XmppPump();
   virtual ~XmppPump();
   
   void DoLogin(const buzz::XmppClientSettings & xcs);
   void DoDisconnect();
 
   buzz::XmppClient *client();
-
+  inline buzz::XmppEngine::Error error() { return error_; }
   void OnStateChange(buzz::XmppEngine::State state);
  
   buzz::XmppReturnStatus SendStanza(const buzz::XmlElement *stanza);
 
   sigslot::signal1<buzz::XmppEngine::State> SignalXmppState;
 private:
-  XmppPumpNotify *notify_;
   buzz::XmppEngine::State state_;
+  buzz::XmppEngine::Error error_;
   std::shared_ptr<buzz::XmppClient> client_;
-  std::shared_ptr<buzz::AsyncSocket> socket_;
-  std::shared_ptr<buzz::PreXmppAuth> auth_;
+  std::shared_ptr<buzz::XmppSocket> socket_;
+  std::shared_ptr<XmppAuth> auth_;
   class PrivateTaskRunner;
   friend class PrivateTaskRunner;
   std::shared_ptr<PrivateTaskRunner> task_runner_;

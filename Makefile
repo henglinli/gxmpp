@@ -6,14 +6,14 @@
 # Uncomment exactly one of the lines labelled (A), (B), and (C) below
 # to switch between compilation modes.
 
-OPT ?= -g -O0 -pipe -D LOGGING # (A) Production use (optimized mode)
+OPT ?= -g -O0 -pipe -DLOGGING # (A) Production use (optimized mode)
 # OPT ?= -g2              # (B) Debug mode, w/ full line-level debugging symbols
 # OPT ?= -O2 -g2 -DNDEBUG # (C) Profiling mode: opt, but w/debugging symbols
 #-----------------------------------------------
 CC = clang
 CXX = clang++
 
-FLAGS += -D POSIX -D EXPAT_RELATIVE_PATH -Wall
+FLAGS += -DPOSIX -DEXPAT_RELATIVE_PATH -Wall
 CFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -DHAVE_MEMMOVE
 CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -std=c++11
 LDFLAGS += 
@@ -26,8 +26,8 @@ ifeq ($(UNAME_S),Linux)
 	LIBS += -lrt
 endif
 ifeq ($(UNAME_S),Darwin)
-        FLAGS += -D OSX -fobjc-arc
-	LDFLAGS +=
+    FLAGS += -DOSX -fobjc-arc -stdlib=libc++
+	LDFLAGS += -lc++
 	LIBS +=  -lobjc -framework CoreFoundation -framework Cocoa
 	OSX_SRC += $(wildcard talk/base/*.mm)
 endif

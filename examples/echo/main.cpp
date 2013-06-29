@@ -3,7 +3,8 @@
 #include "talk/base/cryptstring.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/xmppclientsettings.h"
-#include "gxmpp/xmppthread.h"
+  //#include "gxmpp/xmppthread.h"
+#include "gxmpp/pumpthread.h"
 #include "echothread.h"
 
 //#define HEAPCHECK
@@ -124,9 +125,14 @@ int main(int argc, char* argv[]) {
     client.Init(argv[1], argv[2], "113.142.30.52");
     client.Login();
 #else
+#if 0
     gxmpp::XmppThread thread;
+#else
+    gxmpp::PumpThread thread;
+#endif
     thread.Start();
     thread.Init(argv[1], argv[2], "113.142.30.52");
+    thread.Login();
     thread.Login();
 #endif
     // Use main thread for console input

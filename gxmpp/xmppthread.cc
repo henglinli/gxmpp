@@ -30,6 +30,7 @@
 #endif
 #include "talk/xmpp/xmppengine.h"
 #include "talk/xmpp/rostermodule.h"
+#include "xmpppump.h"
 #include "xmppthread.h"
 
 namespace gxmpp {
@@ -44,17 +45,16 @@ const uint32 MSG_XMPPOPEN = 5;
 const uint32 MSG_XMPPMESSAGE = 6;
 const uint32 MSG_XMPPCLOSED = 7;
 
-buzz::XmppEngine::Error error_;
+buzz::XmppEngine::Error error_ = buzz::XmppEngine::ERROR_NONE;
 buzz::Jid from_;
 buzz::Jid to_;
 std::string message_;
 buzz::XmppClientSettings xcs_;
 } // namspace
-
 // XmppThread::PrivateModule
 class XmppThread::PrivateRosterModule
-    : public NonCopyable
-    , public buzz::XmppRosterHandler
+    // : NonCopyable
+  : public buzz::XmppRosterHandler
 {
  public:
   PrivateRosterModule() {
@@ -125,15 +125,16 @@ class XmppThread::PrivateRosterModule
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   }
  private:
-  talk_base::scoped_ptr<buzz::XmppRosterModule> roster_module_;
+  std::shared_ptr<buzz::XmppRosterModule> roster_module_;
 };
 // XmppThread
 XmppThread::XmppThread() {
-  xmpp_pump_.reset(new XmppPump(this));
-  roster_module_.reset(new PrivateRosterModule);
+    // nil
 }
 
 XmppThread::~XmppThread() {
+  xmpp_pump_->SignalXmppState.disconnect(this);
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
   // nil
 }
 bool XmppThread::Init(const std::string &jid,
@@ -157,6 +158,11 @@ bool XmppThread::Init(const std::string &jid,
   } else {
     xcs_.set_server(talk_base::SocketAddress(tmp_jid.domain(), kDefaultXmppPort));
   }
+
+  xmpp_pump_.reset(new XmppPump);
+  xmpp_pump_->SignalXmppState.connect(this, &XmppThread::OnStateChange);
+  roster_module_.reset(new PrivateRosterModule);
+    //roster_module_ = new PrivateRosterModule;
   talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
   Start();
   return true;
@@ -186,7 +192,8 @@ void XmppThread::OnStateChange(buzz::XmppEngine::State state) {
       break;
     }
     case buzz::XmppEngine::STATE_CLOSED: {
-      error_ = client()->GetError(NULL);
+        //error_ = client()->GetError(nullptr);
+      error_ = xmpp_pump_->error();
       Post(this, MSG_XMPPCLOSED);
       break;
     }
