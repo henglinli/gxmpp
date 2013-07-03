@@ -23,7 +23,8 @@ expat_C_INCLUDES += \
 gxmpp_SRC_FILES := \
 	$(wildcard talk/base/*.cc) \
 	$(wildcard talk/xmllite/*.cc) \
-	$(wildcard talk/xmpp/*.cc)
+	$(wildcard talk/xmpp/*.cc) \
+	$(wildcard gxmpp/*.cc)
 
 gxmpp_CXXFLAGS := \
 	-Wall \
@@ -57,9 +58,9 @@ LOCAL_MODULE := gxmpp_static
 
 LOCAL_C_INCLUDES += $(gxmpp_C_INCLUDES)
 
-#LOCAL_CFLAGS := -std=gnu++11
+LOCAL_CFLAGS := 
 
-LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS)
+LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS) -std=gnu++11
 
 LOCAL_SRC_FILES := $(gxmpp_SRC_FILES)
 
@@ -72,7 +73,7 @@ LOCAL_MODULE := gxmpp
 
 LOCAL_C_INCLUDES += $(gxmpp_C_INCLUDES)
 
-LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS)
+LOCAL_CXXFLAGS += $(gxmpp_CXXFLAGS) -std=gnu++11
 
 LOCAL_LDLIBS := -llog
 

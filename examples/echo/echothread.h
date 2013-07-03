@@ -29,6 +29,7 @@
 #include "talk/xmpp/pingtask.h"
 #include "talk/xmpp/presenceouttask.h"
 #include "talk/xmpp/presencereceivetask.h"
+#include "gxmpp/pumpthread.h"
 //#define SELF_XMPP_PUMP
 #ifndef SELF_XMPP_PUMP
 #include "talk/xmpp/xmpppump.h"
@@ -49,7 +50,7 @@ namespace echo {
                                  const std::string& message,
                                  std::string* response) = 0;
     virtual void DoOnXmppOpen() = 0;
-    virtual void DoOnXmppClosed(int error) = 0;
+    virtual void DoOnXmppClosed(buzz::XmppEngine::Error error) = 0;
     
     inline void SetResponse(bool yes) {
       response_ = yes;
@@ -80,7 +81,7 @@ namespace echo {
         const std::string&,
         std::string*> SignalXmppMessage;
     sigslot::signal0<> SignalXmppOpen;
-    sigslot::signal1<int> SignalXmppClosed;
+    sigslot::signal1<buzz::XmppEngine::Error> SignalXmppClosed;
  public:
     EchoThread();
     ~EchoThread();
@@ -124,5 +125,23 @@ namespace echo {
     XmppHandler *xmpp_handler_;
     DISALLOW_EVIL_CONSTRUCTORS(EchoThread);
   };
+  // NewEchoThread
+  class NewEchoThread : public gxmpp::PumpThread {
+ public:
+    void RegisterXmppHandler(XmppHandler *xmpp_handler);
+    buzz::XmppReturnStatus SendXmppMessage(const buzz::Jid& to, const std::string& message);
+    void DoOnXmppOpen();
+    void DoOnXmppClosed();
+    void DoOnXmppMessage(const buzz::Jid& from,
+                         const buzz::Jid& to,
+                         const std::string& message);
+    void DoOnPingTimeout();
+ private:
+    buzz::PingTask *ping_task_;
+    echo::SendTask *send_task_;
+    echo::ReceiveTask *receive_task_;
+    XmppHandler *xmpp_handler_;
+  };
 }
+
 #endif  // _ECHO_XMPPTHREAD_H_

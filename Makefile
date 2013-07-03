@@ -13,15 +13,15 @@ OPT ?= -g -O0 -pipe -DLOGGING # (A) Production use (optimized mode)
 CC = clang
 CXX = clang++
 
-FLAGS += -DPOSIX -DEXPAT_RELATIVE_PATH -Wall
-CFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -DHAVE_MEMMOVE
-CXXFLAGS += -I. -I./third_party/expat/lib  $(OPT) $(FLAGS) -fPIC -std=c++11
+FLAGS += -DPOSIX -DEXPAT_RELATIVE_PATH -Wall -Wextra -fPIC 
+CFLAGS += -I. -Ithird_party/expat/lib  $(OPT) $(FLAGS) -DHAVE_MEMMOVE
+CXXFLAGS += -I. -Ithird_party/expat/lib  $(OPT) $(FLAGS) -std=c++11
 LDFLAGS += 
 LIBS += 
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
-	FLAGS += -D LINUX
+	FLAGS += -DLINUX
 	LDFLAGS += -pthread
 	LIBS += -lrt
 endif
@@ -73,12 +73,12 @@ $(LIBRARY): $(LIBOBJECTS)
 
 HELLO_SRC += $(wildcard ./examples/hello/*.cc)
 HELLO_OBJS += $(HELLO_SRC:.cc=.o)
-gxmpp_hello: $(LIBOBJECTS) $(HELLO_OBJS)
+gxmpp_hello: $(HELLO_OBJS) $(LIBRARY)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 CHAT_SRC += $(wildcard ./examples/chat/*.cc)
 CHAT_OBJS += $(CHAT_SRC:.cc=.o)
-gxmpp_chat: $(LIBOBJECTS) $(CHAT_OBJS)
+gxmpp_chat: $(CHAT_OBJS) $(LIBRARY)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 ECHO_SRC += $(wildcard ./examples/echo/*.cc) 
@@ -86,7 +86,7 @@ ECHO_SRC_MAIN += $(wildcard ./examples/echo/*.cpp)
 ECHO_OBJS_MAIN += $(ECHO_SRC_MAIN:.cpp=.o)
 ECHO_OBJS += $(ECHO_SRC:.cc=.o) $(ECHO_OBJS_MAIN)
 
-gxmpp_echo: $(LIBOBJECTS) $(ECHO_OBJS)
+gxmpp_echo: $(ECHO_OBJS) $(LIBRARY)
 	$(CXX) $(LDFLAGS) $(LIBS) $^ -o $@ 
 
 #=============================================================

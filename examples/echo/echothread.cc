@@ -279,4 +279,77 @@ void EchoThread::OnStateChange(buzz::XmppEngine::State state) {
     }
   }
 }
+// NewEchoThread;
+void NewEchoThread::RegisterXmppHandler(XmppHandler *xmpp_handler) {
+  xmpp_handler_ = xmpp_handler;
+  if (xmpp_handler_) {
+    SignalXmppOpen.connect(xmpp_handler_, &XmppHandler::DoOnXmppOpen);
+    SignalXmppClosed.connect(xmpp_handler_, &XmppHandler::DoOnXmppClosed);
+  }
 }
+buzz::XmppReturnStatus NewEchoThread::SendXmppMessage(const buzz::Jid& to,
+                                                      const std::string& message) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  // Make sure we are actually connected.
+  if (state() != buzz::XmppEngine::STATE_OPEN) {
+    return buzz::XMPP_RETURN_BADSTATE;
+  }
+  return send_task_->Send(to, message);
+}
+void NewEchoThread::DoOnPingTimeout() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  Post(this, MSG_DISCONNECT);
+}
+
+void NewEchoThread::DoOnXmppOpen() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  // send
+#define SEND
+#ifdef SEND
+  send_task_ = new echo::SendTask(client());
+  send_task_->Start();
+#endif //SEND
+  // receive
+#define RECEIVE
+#ifdef RECEIVE
+  receive_task_ = new echo::ReceiveTask(client());
+  receive_task_->SignalReceived.connect(this, &NewEchoThread::DoOnXmppMessage);
+  receive_task_->Start();
+#endif // RECEIVE
+  // ping
+#define PING
+#ifdef PING
+  ping_task_ = new buzz::PingTask(client(), 
+                                  talk_base::Thread::Current(),
+                                  16000,
+                                  5000);
+  ping_task_->SignalTimeout.connect(this, &NewEchoThread::DoOnPingTimeout);
+  ping_task_->Start();
+#endif // PING
+  if (xmpp_handler_) {
+    //xmpp_handler_->DoOnXmppOpen();
+    SignalXmppOpen();
+  }
+}
+void NewEchoThread::DoOnXmppClosed() {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  if (xmpp_handler_) {
+    //xmpp_handler_->DoOnXmppClosed(error_);
+    SignalXmppClosed(error());
+  }
+}
+void NewEchoThread::DoOnXmppMessage(const buzz::Jid& from,
+                                    const buzz::Jid& to,
+                                    const std::string& message) {
+  LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+  static std::string response;
+  if(xmpp_handler_) {
+    xmpp_handler_->DoOnXmppMessage(from, to, message, &response);
+    if(xmpp_handler_->Response()) {
+      if (client()->jid() != from) {
+        send_task_->Send(from, response);
+      }
+    }
+  }
+}
+} // namespace echo

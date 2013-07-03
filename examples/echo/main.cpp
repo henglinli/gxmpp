@@ -3,7 +3,7 @@
 #include "talk/base/cryptstring.h"
 #include "talk/base/logging.h"
 #include "talk/xmpp/xmppclientsettings.h"
-  //#include "gxmpp/xmppthread.h"
+
 #include "gxmpp/pumpthread.h"
 #include "echothread.h"
 
@@ -49,7 +49,6 @@ class Client : public echo::XmppHandler
     } else {
       xcs_.set_server(talk_base::SocketAddress(jid_.domain(), kDefaultXmppPort));
     }
-    talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
     SetResponse(true);
     thread_.reset(new echo::EchoThread);
     thread_->RegisterXmppHandler(this);
@@ -62,7 +61,10 @@ class Client : public echo::XmppHandler
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
     thread_->Login(xcs_);
   }
-
+  void Disconnect() {
+    LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
+    thread_->Disconnect();
+  }
   void Logout()
   {
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
@@ -87,7 +89,7 @@ class Client : public echo::XmppHandler
       thread_->Disconnect();      
     }
   }
-  virtual void DoOnXmppClosed(int error)
+  virtual void DoOnXmppClosed(buzz::XmppEngine::Error error)
   {
     LOG(LS_SENSITIVE) << __PRETTY_FUNCTION__;
     LOG(LS_SENSITIVE) << "Error " << error;
@@ -118,35 +120,42 @@ int main(int argc, char* argv[]) {
       std::cout << argv[1] << " bad jid" << std::endl;
       return -1;
     }
-#define XMPPTHREAD
+    talk_base::LogMessage::LogToDebug(talk_base::LS_SENSITIVE);
+    //#define XMPPTHREAD
 #ifndef XMPPTHREAD
     Client client;
     
     client.Init(argv[1], argv[2], "113.142.30.52");
     client.Login();
-#else
-#if 0
-    gxmpp::XmppThread thread;
-#else
-    gxmpp::PumpThread thread;
-#endif
-    thread.Start();
-    thread.Init(argv[1], argv[2], "113.142.30.52");
-    thread.Login();
-    thread.Login();
-#endif
     // Use main thread for console input
     std::string line;
     while (std::getline(std::cin, line)) {
       if ("quit" == line || "q" == line) {
         break;
       }
+      if("continue" == line || "c" == line) {
+        client.Disconnect();
+        client.Login();
+      }
     }
-#ifndef XMPPTHREAD
     client.Logout();
 #else
+    gxmpp::PumpThread thread;
+    thread.Start();
+    thread.Init(argv[1], argv[2], "113.142.30.52");
+    thread.Login();
+    // Use main thread for console input
+    std::string line;
+    while (std::getline(std::cin, line)) {
+      if ("quit" == line || "q" == line) {
+        break;
+      }
+      if("continue" == line || "c" == line) {
+        thread.Disconnect();
+        thread.Login();
+      }
+    }
     thread.Disconnect();
-    thread.Stop();
 #endif
   }
 #ifdef HEAPCHECK

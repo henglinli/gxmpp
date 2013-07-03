@@ -56,6 +56,10 @@ namespace gxmpp {
               const std::string &password,
               const std::string &server = "");
 
+    buzz::XmppClient* client();
+    buzz::XmppEngine::State state();
+    buzz::XmppEngine::Error error();
+        
     void Login();
     void DoLogin();
     void Disconnect();
@@ -71,7 +75,20 @@ namespace gxmpp {
 
     sigslot::signal0<> SignalXmppOpen;
     sigslot::signal1<buzz::XmppEngine::Error> SignalXmppClosed;
-  private:
+  private:   
+#ifdef REUSE
+    std::shared_ptr<buzz::XmppClient> client_;
+    std::shared_ptr<buzz::XmppSocket> socket_;
+    std::shared_ptr<XmppAuth> auth_;
+#else
+    buzz::XmppClient* client_;
+    buzz::XmppSocket* socket_;
+    XmppAuth* auth_;
+#endif
+    buzz::XmppEngine::Error error_ = buzz::XmppEngine::ERROR_NONE;
+    buzz::XmppEngine::State state_ = buzz::XmppEngine::STATE_NONE;
+    buzz::XmppClientSettings xcs_;
+    
     class PrivateTaskRunner;
     friend class PrivateTaskRunner;
     std::shared_ptr<PrivateTaskRunner> task_runner_;
