@@ -48,7 +48,7 @@ namespace gxmpp {
   : NonCopyable
   , public talk_base::MessageHandler
   , public talk_base::Thread
-  , public sigslot::has_slots<> {
+  , public sigslot::as_slots<> {
   public:
     PumpThread();
     virtual ~PumpThread();
@@ -61,9 +61,7 @@ namespace gxmpp {
     buzz::XmppEngine::Error error();
         
     void Login();
-    void DoLogin();
     void Disconnect();
-    void DoDisconnect();
     
     void OnStateChange(buzz::XmppEngine::State state);
     void OnMessage(talk_base::Message *pmsg);
@@ -75,7 +73,9 @@ namespace gxmpp {
 
     sigslot::signal0<> SignalXmppOpen;
     sigslot::signal1<buzz::XmppEngine::Error> SignalXmppClosed;
-  private:   
+  private:
+     void DoLogin();
+     void DoDisconnect();
 #ifdef REUSE
     std::shared_ptr<buzz::XmppClient> client_;
     std::shared_ptr<buzz::XmppSocket> socket_;
