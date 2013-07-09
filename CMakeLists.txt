@@ -1,0 +1,25 @@
+cmake_minimum_required (VERSION 2.8)
+project(gxmpp)
+include_directories(${gxmpp_SOURCE_DIR} ${gxmpp_SOURCE_DIR}/third_party/expat/lib)
+if(DEFINED CMAKE_CONFIGURATION_TYPES)
+else()
+  set(CMAKE_BUILD_TYPE "Debug")
+  message("not set build type: use " ${CMAKE_BUILD_TYPE})
+  add_definitions(-DLOGGING)
+endif()
+if(UNIX)
+  add_definitions(-DPOSIX)
+  if(APPLE)
+    add_definitions(-DOSX)
+  else()
+  endif()
+endif()
+add_subdirectory(third_party)
+add_subdirectory(talk)
+add_subdirectory(gxmpp)
+add_subdirectory(examples)
+add_library(gxmpp STATIC $<TARGET_OBJECTS:expat>
+  $<TARGET_OBJECTS:talk_base> 
+  $<TARGET_OBJECTS:talk_xmllite>
+  $<TARGET_OBJECTS:talk_xmpp>
+  $<TARGET_OBJECTS:extra>)
