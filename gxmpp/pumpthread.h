@@ -48,7 +48,7 @@ namespace gxmpp {
   : NonCopyable
   , public talk_base::MessageHandler
   , public talk_base::Thread
-  , public sigslot::as_slots<> {
+  , public sigslot::has_slots<> {
   public:
     PumpThread();
     virtual ~PumpThread();
