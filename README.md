@@ -17,9 +17,9 @@ port from libjinle svn r325.
 ### Build and Install
 
     make
-    _or_
+    or
     mkdir build; cd build; cmake ..; make
-    _or_
+    or
     move to folder jni and ndk_build 
 
 ### Getting Started
