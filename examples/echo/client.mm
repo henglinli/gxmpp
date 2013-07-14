@@ -24,6 +24,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #include "echothread.h"
 #import "client.h"
 class ClientHandler : public echo::XmppHandler {
@@ -35,63 +36,71 @@ public:
     if([delegate conformsToProtocol:@protocol(GxmppClientDelegate)]
        && [delegate respondsToSelector:@selector(didOnXmppMessage)]) {
       [delegate performSelector:@selector(didOnXmppMessage)];
-  } 
+    }
+  }
   void DoOnXmppOpen() {
     if([delegate conformsToProtocol:@protocol(GxmppClientDelegate)]
        && [delegate respondsToSelector:@selector(didOnXmppOpen)]) {
       [delegate performSelector:@selector(didOnXmppOpen)];
+    }
   }
   void DoOnXmppClosed(buzz::XmppEngine::Error error) {
     if([delegate conformsToProtocol:@protocol(GxmppClientDelegate)]
        && [delegate respondsToSelector:@selector(didOnXmppClosed)]) {
       [delegate performSelector:@selector(didOnXmppClosed)];
+    }
   }
-  id<GxmppClientDelegate> delegate
-}
+  id<GxmppClientDelegate> delegate;
+};
 
 @implementation GxmppClient {
-  @private
-  echo::NewEchoThread* thread_;
-  ClientHandler* handler_;
+@private
+  NSString *_jid;
+  NSString *_password;
+  NSString *_server;
+  echo::NewEchoThread thread_;
+  ClientHandler handler_;
 }
 
-+(id)alloc {
-  handler_ = new ClientHandler;
-  thread_ = new gxmpp::PumpThread;
-  return [super alloc];
+@synthesize jid = _jid;
+@synthesize password = _password;
+@synthesize server = _server;
+  //dynamic delegate
+@dynamic delegate;
+-(id<GxmppClientDelegate>) delegate {
+  return handler_.delegate;
 }
-
+-(void)setDelegate: (id<GxmppClientDelegate>) delegate {
+  handler_.delegate = delegate;
+}
+  //
 -(id)init {
   return [self initWithJid: @"" Password:@"" Server:@""];
 }
 
--(id)initWithJid:(NSString *)j Password:(NSString *)p Server:(NSString *)s {
+-(id)initWithJid:(NSString *)jid Password:(NSString *)password Server:(NSString *)server {
   if ((self = [super init])) {
-    jid = j;
-    password = p;
-    server = s;
-    handler_->delegate = _delegate;
-    thread_->RegisterXmppHandler(handler_);
-    thread_->Init([jid UTF8String], [password UTF8String], [server UTF8String]);
+    _jid = jid;
+    _password = password;
+    _server = server;
+    thread_.RegisterXmppHandler(&handler_);
+    thread_.Init([_jid UTF8String], [_password UTF8String], [_server UTF8String]);
   }
   return self;
 }
 
--(void) dealloc {
-  delete thread_;
-  delete handler_;
-  [super dealloc];
+-(void) setResponse: (BOOL) yes {
+  handler_.SetResponse(yes);
 }
 
--(void) setResponse: (BOOL yes) {
-  handler_->SetResponse(yes);
-}
-    
 -(void) login {
-  thread_->Login();
+  thread_.Login();
 }
+-(int)sendTo:(NSString *)to WithMessage:(NSString *)message {
 
+  return 0;
+}
 -(void) logout {
-  thread_->Disconnect();
+  thread_.Disconnect();
 }
 @end

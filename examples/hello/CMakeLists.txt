@@ -1,3 +1,10 @@
 aux_source_directory(. hello_SRC)
 add_executable(gxmpp_hello ${hello_SRC})
-target_link_libraries(gxmpp_hello gxmpp pthread rt)
+
+if(UNIX)
+  if(APPLE)
+    target_link_libraries(gxmpp_hello gxmpp "-framework Cocoa")
+  else()
+    target_link_libraries(gxmpp_hello gxmpp pthread rt)
+  endif()
+endif()

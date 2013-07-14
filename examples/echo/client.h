@@ -27,25 +27,6 @@
 
 #import <Foundation/Foundation.h>
 
-@interface GxmppClient : NSObject {
-}
-@property(assign) id<GxmppClientDelegate> delegate;
-@public
-// create and distroy
-+(id)alloc;
--(id)init;
--(id)initWithJid:(NSString *)jid Password:(NSString *)pasword Server:(NSString *)server;
--(void)dealoc;
-// functional
--(void)setReponse:(BOOL yes);
--(void)login;
--(void)logout;
--(int)sendTo:(NSString *)to WithMessage:(NSString *)message;
-// property
-@property NSString *jid;
-@property NSString *password;
-@property NSString *server;
-@end
 // protocol
 @protocol GxmppClientDelegate <NSObject>
 @optional
@@ -54,4 +35,21 @@
 // as it's name
 -(void)didOnXmppOpen;
 -(void)didOnXmppClosed:(int)error;
+@end
+
+@interface GxmppClient : NSObject
+
+// create and distroy
+-(id)init;
+-(id)initWithJid:(NSString *)jid Password:(NSString *)pasword Server:(NSString *)server;
+// functional
+-(void)setResponse:(BOOL) yes;
+-(void)login;
+-(void)logout;
+-(int)sendTo:(NSString *)to WithMessage:(NSString *)message;
+// property
+@property(assign) id<GxmppClientDelegate> delegate;
+@property(assign) NSString *jid;
+@property(assign) NSString *password;
+@property(assign) NSString *server;
 @end
