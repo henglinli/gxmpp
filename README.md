@@ -11,12 +11,15 @@ port from libjinle svn r325.
 
 ### Requirements
 
- * [Expat][expat] >= 2.1.0
- * [Android NDK][ndk] (build)
-
+ * [Expat][expat] >= 2.1.0 (already in the thirdparty folder)
+ * [Android NDK][ndk] (build for Android)
+ * [Cmake][cmake](build for Linux or OS X)
 ### Build and Install
 
-    make _or_
+    make
+    _or_
+    mkdir build; cd build; cmake ..; make
+    _or_
     move to folder jni and ndk_build 
 
 ### Getting Started
@@ -33,3 +36,4 @@ This work is licensed under the New BSD License (see the LICENSE file).
 [expat]: http://expat.sourceforge.net/
 [ndk]: https://developer.android.com/tools/sdk/ndk/index.html
 [txmpp]: https://github.com/silas/txmpp
+[cmake]: http://cmake.org/
