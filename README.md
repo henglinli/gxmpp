@@ -13,14 +13,12 @@ port from libjinle svn r325.
 
  * [Expat][expat] >= 2.1.0 (already in the thirdparty folder)
  * [Android NDK][ndk] (build for Android)
- * [Cmake][cmake](build for Linux or OS X)
+ * [Cmake][cmake] (build for Linux or OS X)
 ### Build and Install
 
-    make
-    or
-    mkdir build; cd build; cmake ..; make
-    or
-    move to folder jni and ndk_build 
+ * make
+ * mkdir build; cd build; cmake ..; make
+ * mv gxmpp jni; cd jni; ndk_build 
 
 ### Getting Started
 
